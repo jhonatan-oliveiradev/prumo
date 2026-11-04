@@ -9,3 +9,8 @@ Eight automated tests cover existing monetary logic, settling commitments, pendi
 Live login/signup and save/reload across sessions remain unverified: the preview requires Vercel Authentication; the connected deployment-fetch operation returned 403 when reading deployment aliases. The local executor also cannot resolve/reach the Neon database host. Schema execution and verification used the authorized Neon connector. Deployment Protection was not weakened.
 
 The app retains local mode. Migration of personal browser data is explicit after login, and the original guest backup is retained. Conflicts never overwrite a newer cloud revision. Account cache data is isolated per user. Backend uses normalised financial tables; snapshot transport is transitional. Existing goal movement history is retained by delta adjustments; the snapshot bulk API is not intended for future transfer/recurrence clients. Recovery of lost passwords and email verification are deferred and disclosed before signup.
+
+
+## Profile hydration and first-sync follow-up
+
+An empty cloud response during focus refresh used `emptyData`, dropping the session display name. All cloud hydration now uses one resolver with the authenticated name as fallback; custom names and existing financial data are preserved. Revision zero is shown as Connected, not Synced. The dashboard offers explicit migration of guest data, or first-account setup if no guest data exists. The original guest data remains untouched. Online server failures are no longer labeled Offline. Dark surfaces now use a near-black canvas with only a small green channel difference.
