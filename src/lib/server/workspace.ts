@@ -18,9 +18,9 @@ export async function readWorkspace(userId:string){
 export async function writeWorkspace(user:{id:string;name:string},data:FinanceData,revision:number){
  const id=workspaceId(user.id);
  try{return await prisma.$transaction(async tx=>{
+  const profile=await tx.appUser.upsert({where:{authSubject:user.id},create:{authSubject:user.id,displayName:user.name},update:{}});
   if(revision===0){
-   await tx.appUser.upsert({where:{authSubject:user.id},create:{id:user.id,authSubject:user.id,displayName:user.name},update:{}});
-   await tx.workspace.create({data:{id,name:'Meu espaço',displayName:data.name,revision:1,members:{create:{userId:user.id,role:'OWNER'}}}});
+   await tx.workspace.create({data:{id,name:'Meu espaço',displayName:data.name,revision:1,members:{create:{userId:profile.id,role:'OWNER'}}}});
   }else{
    const result=await tx.workspace.updateMany({where:{id,revision,members:{some:{user:{authSubject:user.id},role:{in:['OWNER','EDITOR']}}}},data:{revision:{increment:1},displayName:data.name}});
    if(result.count!==1)throw new RevisionConflict();
@@ -38,7 +38,7 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
   await tx.goal.deleteMany({where:{workspaceId:id,id:{notIn:data.goals.map(g=>entityId(id,'goal',g.id))}}});
   for(const g of data.goals){const gid=entityId(id,'goal',g.id);await tx.goal.upsert({where:{id:gid},create:{id:gid,clientId:g.id,workspaceId:id,name:g.name,targetAmountMinor:BigInt(g.target)},update:{name:g.name,targetAmountMinor:BigInt(g.target)}});const movements=await tx.goalMovement.findMany({where:{goalId:gid}});const saved=movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n);const difference=BigInt(g.saved)-saved;if(difference!==0n)await tx.goalMovement.create({data:{workspaceId:id,goalId:gid,kind:difference>0n?'ADJUSTMENT_IN':'ADJUSTMENT_OUT',amountMinor:difference>0n?difference:-difference,occurredOn:new Date(),note:'Ajuste do valor reservado no aplicativo'}});}
   await tx.account.deleteMany({where:{workspaceId:id,id:{notIn:data.accounts.map(a=>entityId(id,'account',a.id))}}});
-  await tx.auditLog.create({data:{workspaceId:id,actorId:user.id,action:'workspace.sync',entityType:'Workspace',entityId:id,metadata:{revision:revision+1}}});
+  await tx.auditLog.create({data:{workspaceId:id,actorId:profile.id,action:'workspace.sync',entityType:'Workspace',entityId:id,metadata:{revision:revision+1}}});
   return {revision:revision+1,updatedAt:new Date().toISOString()};
  },{maxWait:10000,timeout:60000});}catch(e){if(e instanceof Prisma.PrismaClientKnownRequestError&&e.code==='P2002')throw new RevisionConflict();throw e;}
 }

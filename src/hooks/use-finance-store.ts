@@ -7,7 +7,7 @@ type Cache={data:FinanceData;revision:number;dirty:boolean};
 export type SyncState='local'|'loading'|'ready'|'saving'|'offline'|'conflict'|'error';
 const GUEST_KEY='prumo:data:v1';
 export function useFinanceStore(){
- const [data,setData]=useState<FinanceData>(emptyData),[ready,setReady]=useState(false),[user,setUser]=useState<CloudUser|null>(null),[enabled,setEnabled]=useState(false),[state,setState]=useState<SyncState>('loading'),[message,setMessage]=useState(''),[localAvailable,setLocalAvailable]=useState(false);
+ const [data,setData]=useState<FinanceData>(emptyData),[ready,setReady]=useState(false),[user,setUser]=useState<CloudUser|null>(null),[enabled,setEnabled]=useState(false),[state,setState]=useState<SyncState>('loading'),[message,setMessage]=useState(''),[localAvailable,setLocalAvailable]=useState(false),[storageError,setStorageError]=useState(false);
  const owner=useRef<CloudUser|null>(null),current=useRef<Cache>({data:emptyData,revision:0,dirty:false}),busy=useRef(false),mounted=useRef(true),conflict=useRef(false),undo=useRef<FinanceData|null>(null);
  const cacheKey=()=>owner.current?`prumo:cloud:v1:${owner.current.id}`:GUEST_KEY;
  function writeCache(cache:Cache){localStorage.setItem(cacheKey(),owner.current?JSON.stringify(cache):JSON.stringify(cache.data));}
@@ -32,7 +32,7 @@ export function useFinanceStore(){
   async function initialize(){
    let guest=emptyData;
    try{const raw=localStorage.getItem(GUEST_KEY);if(raw){const parsed=JSON.parse(raw);if(!isFinanceData(parsed))throw Error('Dados locais inválidos.');guest=parsed;}setLocalAvailable(guest.accounts.length>0||guest.transactions.length>0||guest.goals.length>0||guest.budgets.length>0);}
-   catch{setMessage('Não foi possível ler os dados locais. Eles não foram substituídos.');}
+   catch{setStorageError(true);setMessage('Não foi possível ler os dados locais. Eles não foram substituídos.');}
    setData(guest);current.current={data:guest,revision:0,dirty:false};
    try{
     const response=await fetch('/api/v1/session',{cache:'no-store'});
@@ -52,7 +52,7 @@ export function useFinanceStore(){
      if((workspace?.revision??0)!==cache.revision){conflict.current=true;setState('conflict');setMessage('Há alterações em outro dispositivo. Sua cópia local foi preservada.');}
      else {setState('ready');void flush();}
     }else{
-     current.current={data:workspace?.data??{...emptyData,name:session.user.name},revision:workspace?.revision??0,dirty:false};setData(current.current.data);writeCache(current.current);setState('ready');
+     current.current={data:workspace?.data??{...emptyData,name:session.user.name},revision:workspace?.revision??0,dirty:false};setData(current.current.data);writeCache(current.current);setStorageError(false);setState('ready');
     }
    }catch{setState(owner.current?'offline':'local');setMessage('Sem conexão com a nuvem. As alterações locais continuam disponíveis.');}
    finally{if(mounted.current)setReady(true);}
@@ -65,8 +65,9 @@ export function useFinanceStore(){
   const interval=setInterval(retry,4000);
   return()=>{mounted.current=false;window.removeEventListener('online',retry);window.removeEventListener('focus',onFocus);clearInterval(interval);};
  },[flush]);
- function change(next:FinanceData){
-  try{const cache={data:next,revision:current.current.revision,dirty:Boolean(owner.current)};writeCache(cache);undo.current=current.current.data;current.current=cache;setData(next);if(owner.current){if(!conflict.current)setState(navigator.onLine?'saving':'offline');void flush();}setMessage('Alterações salvas neste dispositivo.');return true;}
+ function change(next:FinanceData,recover=false){
+  if(storageError&&!recover){setMessage('Restaure um backup válido antes de alterar os dados locais.');return false;}
+  try{const cache={data:next,revision:current.current.revision,dirty:Boolean(owner.current)};writeCache(cache);undo.current=current.current.data;current.current=cache;setData(next);if(recover)setStorageError(false);if(owner.current){if(!conflict.current)setState(navigator.onLine?'saving':'offline');void flush();}setMessage('Alterações salvas neste dispositivo.');return true;}
   catch{setMessage('Não foi possível salvar neste dispositivo. A alteração não foi aplicada.');return false;}
  }
  function undoChange(){if(!undo.current)return;const previous=undo.current;if(change(previous))undo.current=null;}
@@ -91,6 +92,6 @@ export function useFinanceStore(){
   if(!confirm('Copiar os dados do modo local para sua conta? Isso substituirá o conteúdo atual da conta após sincronizar. O backup local original será mantido.'))return;
   try{const d=JSON.parse(localStorage.getItem(GUEST_KEY)||'null');if(!isFinanceData(d))throw Error();change(d);}catch{setMessage('Os dados locais não puderam ser importados.');}
  }
- return {data,ready,user,enabled,state,message,change,undoChange,canUndo:Boolean(undo.current),setMessage,refresh,useRemote,importLocal,localAvailable};
+ return {data,ready,user,enabled,state,storageError,restore:(next:FinanceData)=>change(next,true),message,change,undoChange,canUndo:Boolean(undo.current),setMessage,refresh,useRemote,importLocal,localAvailable};
 }
 export type FinanceStore=ReturnType<typeof useFinanceStore>;

@@ -21,3 +21,14 @@ test('writes require exact same origin, including rejecting missing origins',()=
  assert.equal(canWriteOrigin('https://prumo.example.attacker.test','https://prumo.example'),false);
  assert.equal(canWriteOrigin(null,'https://prumo.example'),false);
 });
+
+test('Prisma schema includes every field required by the installed auth version',async()=>{
+ const {getAuthTables}=await import('@better-auth/core/db');
+ const {Prisma}=await import('@prisma/client');
+ const tables=getAuthTables({account:{modelName:'authAccount'},rateLimit:{storage:'database'}});
+ for(const table of Object.values(tables)){
+  const model=Prisma.dmmf.datamodel.models.find(m=>m.name.toLowerCase()===table.modelName.toLowerCase());
+  assert.ok(model,`Missing model ${table.modelName}`);
+  for(const [name,field] of Object.entries(table.fields))assert.ok(model.fields.some(f=>f.name===(field.fieldName??name)),`Missing field ${table.modelName}.${name}`);
+ }
+});
