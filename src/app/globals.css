@@ -320,3 +320,15 @@ header > div:first-child { min-width: 0; }
   .upcoming .section-title { align-items: flex-start; }
   .upcoming .section-title .text-button { flex: none; }
 }
+
+.account-control { padding: 14px 10px 0; border-top: 1px solid var(--border); margin-top: 10px; }
+.account-control .secondary { font-size: 11px; width: 100%; padding: 10px 8px; }
+.account-identity { display: flex; align-items: center; gap: 10px; font-size: 12px; overflow-wrap: anywhere; }
+.account-identity strong { font-weight: 500; }
+.account-identity small { display: block; margin-top: 4px; }
+.cloud-settings { display: flex; flex-direction: column; gap: 16px; width: 100%; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.sync-status { background: transparent; color: var(--muted); text-align: right; font: inherit; min-height: 44px; }
+.sync-conflict { border: 1px solid var(--warning); padding: 18px; border-radius: 12px; }
+.sync-conflict p { margin: 12px 0; }
+.sync-conflict, .sync-error, .sync-offline { color: var(--warning); }
+@media(max-width:640px) { .sidebar .account-control { display: none; } }
