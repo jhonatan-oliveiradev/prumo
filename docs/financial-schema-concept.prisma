@@ -1,0 +1,380 @@
+// Prumo — Proposed financial domain schema, v0.1 (2026-11-04)
+// Design specification, not a migrated production database.
+// Monetary amounts are positive integer minor units (BRL cents); never JS floats.
+// All workspace ownership and cross-entity invariants must be checked by services.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceType {
+  PERSONAL
+  SHARED
+}
+
+enum MembershipRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CASH
+  INVESTMENT
+  OTHER
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionKind {
+  INCOME
+  EXPENSE
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum TransactionStatus {
+  PENDING
+  CLEARED
+  VOID
+}
+
+enum BudgetStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum GoalMovementKind {
+  CONTRIBUTION
+  WITHDRAWAL
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+}
+
+enum RecurrenceInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum RecurrenceStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ImportStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AppUser {
+  id            String            @id @default(cuid())
+  authSubject   String            @unique
+  displayName   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  memberships   WorkspaceMember[]
+  auditEvents   AuditLog[]        @relation("AuditActor")
+}
+
+model Workspace {
+  id                 String               @id @default(cuid())
+  name               String
+  type               WorkspaceType        @default(PERSONAL)
+  baseCurrency       String               @default("BRL") @db.VarChar(3)
+  timeZone           String               @default("America/Sao_Paulo")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  members            WorkspaceMember[]
+  accounts           Account[]
+  categories         Category[]
+  transactions       Transaction[]
+  transfers          Transfer[]
+  budgets            Budget[]
+  goals              Goal[]
+  goalMovements      GoalMovement[]
+  recurringRules     RecurringRule[]
+  importBatches      ImportBatch[]
+  idempotencyRecords IdempotencyRecord[]
+  auditEvents        AuditLog[]
+}
+
+model WorkspaceMember {
+  workspaceId String
+  userId      String
+  role        MembershipRole @default(VIEWER)
+  joinedAt    DateTime       @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      AppUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@index([userId])
+}
+
+model Account {
+  id                  String        @id @default(cuid())
+  workspaceId         String
+  name                String
+  type                AccountType   @default(CHECKING)
+  currency            String        @default("BRL") @db.VarChar(3)
+  openingBalanceMinor BigInt        @default(0)
+  isArchived          Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  workspace           Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions        Transaction[]
+  transfersOut        Transfer[]    @relation("TransferSource")
+  transfersIn         Transfer[]    @relation("TransferDestination")
+  linkedGoals         Goal[]
+  goalMovements       GoalMovement[]
+  recurringRules      RecurringRule[]
+
+  @@index([workspaceId, isArchived])
+}
+
+model Category {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  parentId     String?
+  name         String
+  type         CategoryType
+  color        String?      @db.VarChar(7)
+  icon         String?
+  isArchived   Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent       Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[]   @relation("CategoryHierarchy")
+  transactions Transaction[]
+  budgetLines  BudgetLine[]
+  recurringRules RecurringRule[]
+
+  // Nullable parentId makes root-category uniqueness an application invariant.
+  @@index([workspaceId, type, isArchived])
+  @@index([parentId])
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  workspaceId       String
+  accountId         String
+  categoryId        String?
+  transferId        String?
+  recurringRuleId   String?
+  importBatchId     String?
+  kind              TransactionKind
+  status            TransactionStatus @default(CLEARED)
+  amountMinor       BigInt
+  currency          String            @default("BRL") @db.VarChar(3)
+  title             String
+  note              String?
+  occurredOn        DateTime          @db.Date
+  clearedAt         DateTime?
+  importSource      String?
+  importExternalId  String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account           Account           @relation(fields: [accountId], references: [id])
+  category          Category?         @relation(fields: [categoryId], references: [id])
+  transfer          Transfer?         @relation(fields: [transferId], references: [id])
+  recurringRule     RecurringRule?    @relation(fields: [recurringRuleId], references: [id])
+  importBatch       ImportBatch?      @relation(fields: [importBatchId], references: [id])
+
+  @@index([workspaceId, occurredOn, status])
+  @@index([accountId, occurredOn])
+  @@index([categoryId, occurredOn])
+  @@index([transferId])
+  @@unique([workspaceId, importSource, importExternalId])
+}
+
+model Transfer {
+  id                String         @id @default(cuid())
+  workspaceId       String
+  sourceAccountId   String
+  targetAccountId   String
+  amountMinor       BigInt
+  currency          String         @default("BRL") @db.VarChar(3)
+  occurredOn        DateTime       @db.Date
+  note              String?
+  createdAt         DateTime       @default(now())
+
+  workspace         Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceAccount     Account        @relation("TransferSource", fields: [sourceAccountId], references: [id])
+  targetAccount     Account        @relation("TransferDestination", fields: [targetAccountId], references: [id])
+  entries           Transaction[]
+  goalMovements     GoalMovement[]
+
+  @@index([workspaceId, occurredOn])
+}
+
+model Budget {
+  id             String        @id @default(cuid())
+  workspaceId    String
+  name           String
+  currency       String        @default("BRL") @db.VarChar(3)
+  startOn        DateTime      @db.Date
+  endOn          DateTime      @db.Date
+  status         BudgetStatus  @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lines          BudgetLine[]
+
+  @@index([workspaceId, startOn, endOn])
+}
+
+model BudgetLine {
+  id          String   @id @default(cuid())
+  budgetId    String
+  categoryId  String
+  limitMinor  BigInt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([budgetId, categoryId])
+  @@index([categoryId])
+}
+
+model Goal {
+  id                String       @id @default(cuid())
+  workspaceId       String
+  linkedAccountId   String?
+  name              String
+  targetAmountMinor BigInt
+  currency          String       @default("BRL") @db.VarChar(3)
+  status            GoalStatus   @default(ACTIVE)
+  targetOn          DateTime?    @db.Date
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  workspace         Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedAccount     Account?     @relation(fields: [linkedAccountId], references: [id])
+  movements         GoalMovement[]
+
+  @@index([workspaceId, status])
+}
+
+model GoalMovement {
+  id               String           @id @default(cuid())
+  workspaceId      String
+  goalId           String
+  sourceAccountId  String?
+  relatedTransferId String?
+  kind             GoalMovementKind
+  amountMinor      BigInt
+  occurredOn       DateTime         @db.Date
+  note             String?
+  createdAt        DateTime         @default(now())
+
+  workspace        Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  goal             Goal             @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  sourceAccount    Account?        @relation(fields: [sourceAccountId], references: [id])
+  relatedTransfer  Transfer?       @relation(fields: [relatedTransferId], references: [id])
+
+  @@index([goalId, occurredOn])
+  @@index([workspaceId, occurredOn])
+}
+
+model RecurringRule {
+  id              String             @id @default(cuid())
+  workspaceId     String
+  accountId       String
+  categoryId      String?
+  kind            CategoryType
+  amountMinor     BigInt
+  currency        String             @default("BRL") @db.VarChar(3)
+  title           String
+  interval        RecurrenceInterval
+  dayOfMonth      Int?
+  startsOn        DateTime           @db.Date
+  endsOn          DateTime?          @db.Date
+  nextRunOn       DateTime?          @db.Date
+  status          RecurrenceStatus   @default(ACTIVE)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  workspace       Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account         Account            @relation(fields: [accountId], references: [id])
+  category        Category?          @relation(fields: [categoryId], references: [id])
+  transactions    Transaction[]
+
+  @@index([workspaceId, status, nextRunOn])
+}
+
+model ImportBatch {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  source       String
+  contentHash  String?
+  status       ImportStatus @default(QUEUED)
+  createdAt    DateTime     @default(now())
+  completedAt  DateTime?
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([workspaceId, createdAt])
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  operation    String
+  key          String
+  resourceId   String?
+  createdAt    DateTime @default(now())
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, operation, key])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  workspaceId String
+  actorId     String?
+  action      String
+  entityType  String
+  entityId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor       AppUser?  @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([entityType, entityId])
+}
