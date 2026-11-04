@@ -34,3 +34,9 @@ Próxima etapa: Prisma/PostgreSQL, autenticação, autorização por proprietár
 ## Referências
 
 [Figma](https://www.figma.com/design/WuyVWVVH2lZtJeU5E3AXVX/Prumo?node-id=7-2) · [Documentação de marca](https://app.notion.com/p/40e67893a02981a8b210fa3d35d65c92)
+
+## Evolução: layout fluido e compromissos
+
+O conteúdo ocupa a largura restante após a sidebar, sem teto de 1900px; no celular ocupa 100% da largura. Compromissos reúne pendências do mês escolhido e todas as pendências vencidas, respeitando o filtro pessoal/trabalho. Pago/Recebido altera o estado do lançamento existente, sem criar cópia, e permite desfazer. A data agendada é mantida: a versão atual ainda não separa competência e data efetiva de pagamento. Os dados locais existentes continuam compatíveis.
+
+Verificação desta evolução: quatro testes financeiros, TypeScript e build. A conferência visual no navegador segue pendente por incompatibilidade do serviço de preview com Next.js.
