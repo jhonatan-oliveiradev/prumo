@@ -25,12 +25,12 @@
 }
 
 :root[data-theme='dark'] {
-  --canvas: #0b0e0d;
-  --surface: #131816;
-  --surface-secondary: #1b211e;
+  --canvas: #080a09;
+  --surface: #101311;
+  --surface-secondary: #171b18;
   --ink: #ecf0ed;
   --muted: #9ca8a0;
-  --border: #29322c;
+  --border: #252b27;
   --brand: #28513b;
   --brand-hover: #315f46;
   --mint: #1b2a21;
@@ -40,8 +40,8 @@
   --chart-income: #46765a;
   --chart-expense: #667b6b;
   --focus: #8eb39a;
-  --sidebar: #101412;
-  --hero: #14231a;
+  --sidebar: #0b0e0c;
+  --hero: #111c15;
   --hero-label: #a7c1ae;
   --hero-caption: #a9baae;
   --shadow: none;
@@ -332,3 +332,9 @@ header > div:first-child { min-width: 0; }
 .sync-conflict p { margin: 12px 0; }
 .sync-conflict, .sync-error, .sync-offline { color: var(--warning); }
 @media(max-width:640px) { .sidebar .account-control { display: none; } }
+
+.migration-banner { display: flex; align-items: center; gap: 18px; padding: 22px 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.migration-banner > div { flex: 1; min-width: 0; }
+.migration-banner h3 { font-size: 15px; }
+.migration-banner p { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 6px; max-width: 680px; }
+@media(max-width:640px) { .migration-banner { flex-wrap: wrap; gap: 14px; padding: 20px; } .migration-banner .primary,.migration-banner .secondary { width: 100%; } .migration-banner > div { min-width: calc(100% - 55px); } }

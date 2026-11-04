@@ -1,10 +1,11 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {emptyData,isFinanceData,type FinanceData} from '@/lib/finance';
+import {hydrateWorkspace,cloudStateForRevision} from '@/lib/cloud-state';
 import type {WorkspaceSnapshot} from '@/lib/sync';
 export type CloudUser={id:string;name:string;email:string};
 type Cache={data:FinanceData;revision:number;dirty:boolean};
-export type SyncState='local'|'loading'|'ready'|'saving'|'offline'|'conflict'|'error';
+export type SyncState='local'|'loading'|'connected'|'ready'|'saving'|'offline'|'conflict'|'error';
 const GUEST_KEY='prumo:data:v1';
 export function useFinanceStore(){
  const [data,setData]=useState<FinanceData>(emptyData),[ready,setReady]=useState(false),[user,setUser]=useState<CloudUser|null>(null),[enabled,setEnabled]=useState(false),[state,setState]=useState<SyncState>('loading'),[message,setMessage]=useState(''),[localAvailable,setLocalAvailable]=useState(false),[storageError,setStorageError]=useState(false);
@@ -52,9 +53,9 @@ export function useFinanceStore(){
      if((workspace?.revision??0)!==cache.revision){conflict.current=true;setState('conflict');setMessage('Há alterações em outro dispositivo. Sua cópia local foi preservada.');}
      else {setState('ready');void flush();}
     }else{
-     current.current={data:workspace?.data??{...emptyData,name:session.user.name},revision:workspace?.revision??0,dirty:false};setData(current.current.data);writeCache(current.current);setStorageError(false);setState('ready');
+     current.current=hydrateWorkspace(workspace,session.user.name);setData(current.current.data);writeCache(current.current);setStorageError(false);setState(cloudStateForRevision(current.current.revision));
     }
-   }catch{setState(owner.current?'offline':'local');setMessage('Sem conexão com a nuvem. As alterações locais continuam disponíveis.');}
+   }catch{setState(owner.current?(navigator.onLine?'error':'offline'):'local');setMessage('Não foi possível carregar a nuvem. As alterações locais continuam disponíveis.');}
    finally{if(mounted.current)setReady(true);}
   }
   void initialize();
@@ -77,18 +78,18 @@ export function useFinanceStore(){
   try{setState('loading');const response=await fetch('/api/v1/workspace',{cache:'no-store'});if(!response.ok)throw Error();const {workspace}=await response.json() as {workspace:WorkspaceSnapshot|null};
    // A local edit may have happened while the request was in flight.
    if(current.current.dirty)return;
-   current.current={data:workspace?.data??emptyData,revision:workspace?.revision??0,dirty:false};writeCache(current.current);setData(current.current.data);setState('ready');
-  }catch{setState('offline');setMessage('Não foi possível atualizar. Sua cópia local foi mantida.');}
+   current.current=hydrateWorkspace(workspace,owner.current.name);writeCache(current.current);setData(current.current.data);setState(cloudStateForRevision(current.current.revision));
+  }catch{setState(navigator.onLine?'error':'offline');setMessage('Não foi possível atualizar a nuvem. Sua cópia local foi mantida.');}
  }
  async function useRemote(){
   if(!owner.current||busy.current)return;
   try{const response=await fetch('/api/v1/workspace',{cache:'no-store'});if(!response.ok)throw Error();const {workspace}=await response.json() as {workspace:WorkspaceSnapshot|null};
    if(!confirm('Usar os dados da nuvem? Exporte um backup primeiro se quiser preservar as alterações locais não sincronizadas.'))return;
-   const cache={data:workspace?.data??emptyData,revision:workspace?.revision??0,dirty:false};writeCache(cache);current.current=cache;undo.current=null;conflict.current=false;setData(cache.data);setState('ready');setMessage('Dados da nuvem carregados.');
+   const cache=hydrateWorkspace(workspace,owner.current.name);writeCache(cache);current.current=cache;undo.current=null;conflict.current=false;setData(cache.data);setState(cloudStateForRevision(cache.revision));setMessage('Dados da nuvem carregados.');
   }catch{setMessage('Não foi possível carregar a nuvem. Nenhum dado foi substituído.');}
  }
  function importLocal(){
-  if(!owner.current||state!=='ready')return;
+  if(!owner.current||!['ready','connected'].includes(state))return;
   if(!confirm('Copiar os dados do modo local para sua conta? Isso substituirá o conteúdo atual da conta após sincronizar. O backup local original será mantido.'))return;
   try{const d=JSON.parse(localStorage.getItem(GUEST_KEY)||'null');if(!isFinanceData(d))throw Error();change(d);}catch{setMessage('Os dados locais não puderam ser importados.');}
  }
