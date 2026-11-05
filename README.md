@@ -75,3 +75,12 @@ Cada análise exige sessão autenticada, sincronização concluída e consentime
 A interface informa que entradas/respostas do plano gratuito podem ser usadas pelo Google para melhorar produtos e permite inspecionar os indicadores enviados. A análise é aproximada e não substitui decisões pessoais. Nenhuma solicitação real ao Google foi executada durante a implementação; testes do transporte usam respostas simuladas.
 
 Referências: https://ai.google.dev/gemini-api/terms e https://ai.google.dev/api/generate-content.
+
+
+### Interface e instalação
+
+A página pública fica em `/` e o aplicativo em `/app`. A PWA mantém o mesmo `id` e passa a iniciar em `/app`; o armazenamento local e as sessões continuam no mesmo domínio. O novo service worker separa os documentos offline de cada rota. A instalação depende do suporte do navegador; não há executável ou pacote de loja.
+
+Selects usam Radix; calendários usam DayPicker em português com digitação brasileira e serialização ISO. Skeletons seguem os padrões de métrica, linha e gráfico do Figma. A marca aparece apenas durante o carregamento real.
+
+Decisões visuais, plano de assets e briefing de vídeo: `docs/design/product-polish.md`.
