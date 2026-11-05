@@ -1,7 +1,8 @@
 import type {Metadata} from 'next';
 import Link from 'next/link';
-import {ArrowUpRight,ArrowRight,ShieldCheck,WifiOff,Sparkles,Wallet,Repeat2,Target,Check} from 'lucide-react';
+import {ArrowUpRight,ShieldCheck,WifiOff,Sparkles,Wallet,Repeat2,Target,Check} from 'lucide-react';
 import {ReferenceNavigation} from '@/components/reference-navigation';
+import {LandingHero} from '@/components/landing-hero';
 import {AlignmentField} from '@/components/alignment-field';
 import {LandingScroll} from '@/components/landing-scroll';
 import {FinanceLayers} from '@/components/finance-layers';
@@ -11,7 +12,7 @@ import {InstallPrumo} from '@/components/install-prumo';
 import './landing-reference.css';
 export const metadata:Metadata={title:'Prumo — Seu dinheiro, no eixo.',description:'Registre seus gastos, organize compromissos e planeje seus próximos passos. No navegador ou instalado como aplicativo.'};
 export default function Landing(){return <main className="landing reference-landing"><LandingMotion/><LandingScroll/><a href="#conteudo" className="ref-skip">Pular para o conteúdo</a><ReferenceNavigation/>
- <section className="ref-hero" id="conteudo"><div data-reveal><p className="eyebrow">CLAREZA PARA A VIDA REAL</p><h1>O seu dinheiro.<br/>Um novo <span>ponto de vista.</span></h1><p>Registre o que acontece hoje.<br/>Entenda o que está por vir.<br/>Encontre seu próximo passo.</p><div className="ref-hero-actions"><Link href="/app" className="primary">Começar a organizar <ArrowRight size={17}/></Link><a href="#camadas" className="secondary">Explore o Prumo <ArrowUpRight size={16}/></a></div></div><a className="ref-hero-note" href="#instalar"><span/>SEU ESPAÇO. ONDE VOCÊ ESTIVER.<ArrowUpRight size={14}/></a></section>
+ <LandingHero/>
  <AlignmentField/>
  <div className="ref-capabilities" aria-label="Recursos do Prumo">{[{Icon:Wallet,label:'Contas e movimentos'},{Icon:Repeat2,label:'Compromissos e recorrências'},{Icon:Target,label:'Orçamentos e metas'},{Icon:Sparkles,label:'Orientação por IA'}].map(({Icon,label})=><a key={label} href="#recursos"><Icon size={19}/><span>{label}</span><ArrowUpRight size={13}/></a>)}</div>
  <FinanceLayers/>
