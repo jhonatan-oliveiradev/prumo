@@ -1,0 +1,120 @@
+/* Shared editorial bounds keep imagery and type on the same page grid. */
+.reference-landing { --landing-offset:60px; }
+html.prumo-landing-scroll { scroll-padding-top:60px; }
+.reference-landing .ref-header { height:56px; min-height:0; margin:0 auto; padding-block:6px; }
+.reference-landing .ref-nav { top:8px; padding:2px; border-radius:6px; box-shadow:0 6px 24px #0002; }
+.reference-landing .ref-nav :is(a,button) { min-height:30px; padding-block:6px; font-size:10px; border-radius:4px; }
+.reference-landing .ref-header > .ref-logo { font-size:25px; }
+.reference-landing .ref-header > .ref-logo img { width:27px; height:27px; }
+
+.reference-landing .use-case-section { max-width:1280px; margin-inline:auto; border-inline:1px solid var(--ref-line); }
+.reference-landing .use-case-copy { padding:72px 38px; }
+.reference-landing .use-case-copy h2 { font-size:clamp(29px,2.55vw,38px); letter-spacing:-1.3px; }
+.reference-landing .use-case-visual { min-height:820px; padding:92px 58px 54px; display:flex; flex-direction:column; align-items:center; }
+.reference-landing .use-case-visual .demo-stage { display:grid; width:100%; max-width:440px; height:auto; }
+.reference-landing .use-case-demo { padding:24px; border-radius:5px; }
+.reference-landing .use-case-demo > strong { font-size:clamp(26px,2.25vw,34px); }
+.reference-landing .demo-context { position:relative; inset:auto; margin:0 -8px 0 12px; }
+.reference-landing .visual-mode { margin-top:28px; }
+.reference-landing .visual-mode button { font-size:10px; min-height:32px; min-width:80px; }
+.reference-landing .use-case-mesh { background-size:auto; }
+
+/* Intro and individual stories share the same optical center as the drawing. */
+.reference-timeline .timeline-intro h2 { margin:18px 0; }
+.reference-timeline .timeline-intro > p:last-child { color:#a3b2a9; font-size:14px; line-height:1.8; max-width:390px; }
+.reference-timeline .timeline-drawing { background:none; }
+.reference-timeline .layers-dots { background-image:radial-gradient(#91b59c28 .7px,transparent .7px); background-size:16px 16px; mask-image:linear-gradient(transparent,#000 15%,#000 85%,transparent); }
+.reference-timeline .teardown-drawing [data-fill] { fill:#050806; }
+.reference-timeline .teardown-drawing [data-line-role] { stroke-width:.7px; }
+.reference-timeline .teardown-callouts text { font-size:6px; letter-spacing:.2px; }
+.reference-timeline .timeline-explore { position:relative; width:calc(100% - 52px); margin:20px 26px 0; }
+.timeline-explore > summary { list-style:none; display:flex; align-items:center; gap:9px; color:#a6b9ad; cursor:pointer; font-size:10px; min-height:36px; }
+.timeline-explore > summary::-webkit-details-marker { display:none; }
+.timeline-explore > summary svg:last-child { margin-left:auto; transition:transform 250ms ease; }
+.timeline-explore[open] > summary svg:last-child { transform:rotate(45deg); }
+.timeline-explore > summary:hover { color:#ecf0ed; }
+.reference-timeline .timeline-explore .timeline-drawing-controls { width:100%; margin:0; padding:14px 0; }
+.reference-timeline .timeline-explore .timeline-assembly-buttons { position:static; margin-bottom:14px; }
+@media(min-width:900px) and (min-height:700px) {
+ .reference-timeline[data-enhanced='true'] { height:400vh; }
+ .reference-timeline[data-enhanced='true'] .timeline-stage { top:60px; height:calc(100svh - 60px); }
+ .reference-timeline[data-enhanced='true'] .timeline-copy { position:relative; padding:38px; overflow:hidden!important; display:block; }
+ .reference-timeline[data-enhanced='true'] .timeline-intro { position:absolute; top:45%; left:38px; right:38px; transform:translateY(-50%); transition:opacity 450ms ease,visibility 450ms; }
+ .reference-timeline[data-enhanced='true'][data-intro='false'] .timeline-intro { opacity:0; visibility:hidden; }
+ .reference-timeline[data-enhanced='true'] .timeline-intro h2 { font-size:clamp(30px,2.6vw,40px); }
+ .reference-timeline[data-enhanced='true'] .timeline-stories { position:absolute; top:45%; left:38px; right:38px; height:280px; min-height:0; transform:translateY(-50%); overflow:visible; mask-image:none; }
+ .reference-timeline[data-enhanced='true'] .timeline-stories::before { display:none; }
+ .reference-timeline[data-enhanced='true'] .timeline-story,.reference-timeline[data-enhanced='true'] .timeline-story.active { inset:0; padding:0; border:0; opacity:0; visibility:hidden; transform:translateY(16px); transition:opacity 350ms ease,transform 600ms var(--ref-ease),visibility 350ms; }
+ .reference-timeline[data-enhanced='true'][data-intro='false'] .timeline-story.active { opacity:1; visibility:visible; transform:none; transition-delay:100ms; }
+ .reference-timeline[data-enhanced='true'] .timeline-story::before { display:none; }
+ .reference-timeline[data-enhanced='true'] .timeline-story h3 { font-size:clamp(28px,2.5vw,36px); font-weight:450; }
+ .reference-timeline[data-enhanced='true'] .timeline-story p { font-size:14px; line-height:1.8; }
+ .reference-timeline[data-enhanced='true'] .timeline-story-label { color:#91b59c; margin-bottom:18px; }
+ .reference-timeline[data-enhanced='true'] .timeline-track { position:absolute; bottom:38px; left:38px; right:38px; margin:0; flex-direction:column; gap:0; }
+ .reference-timeline[data-enhanced='true'] .timeline-track::before { display:block; top:17px; bottom:17px; left:5px; background:#91b59c33; }
+ .reference-timeline[data-enhanced='true'] .timeline-track i { display:block; width:10px; height:10px; }
+ .reference-timeline[data-enhanced='true'] .timeline-track button { min-height:30px; font-size:10px; gap:20px; padding:5px 0; letter-spacing:.8px; }
+ .reference-timeline[data-enhanced='true'][data-intro='true'] .timeline-track button { color:#8c9e93; }
+ .reference-timeline[data-enhanced='true'][data-intro='true'] .timeline-track button i { background:#030504; box-shadow:none; border-color:#5e7b66; }
+ .reference-timeline[data-enhanced='true'] .timeline-instruction { display:none; }
+ .reference-timeline[data-enhanced='true'] .timeline-drawing { padding:0 24px; justify-content:center; }
+ .reference-timeline[data-enhanced='true'] .teardown-drawing { flex:none; width:100%; height:76%; max-height:660px; }
+ .reference-timeline[data-enhanced='true'] .timeline-drawing figcaption { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); }
+ .reference-timeline[data-enhanced='true'] .timeline-explore { position:absolute; bottom:24px; right:26px; width:190px; margin:0; background:#030504e8; padding:0 12px; border:1px solid #91b59c26; border-radius:4px; }
+ .reference-timeline[data-enhanced='true'] .timeline-explore[open] { width:280px; max-width:calc(100% - 52px); }
+}
+
+/* An architectural footer: an oversized wordmark anchors a compact link index. */
+.reference-landing .ref-closing { max-width:1280px; margin-inline:auto; padding:80px 38px; display:grid; grid-template-columns:1.3fr 1fr; gap:24px 64px; }
+.reference-landing .ref-closing > img { grid-column:1/-1; width:40px; height:40px; margin:0 0 8px; }
+.reference-landing .ref-closing h2 { grid-row:2/4; font-size:clamp(38px,4vw,58px); margin:0; }
+.reference-landing .ref-closing > p { font-size:14px; line-height:1.8; margin:0; align-self:end; }
+.reference-landing .ref-closing > div { align-self:start; flex-wrap:wrap; margin:0; gap:14px 20px; }
+.reference-landing .ref-footer { max-width:1280px; padding:58px 38px 24px; column-gap:64px; row-gap:40px; border-inline:1px solid var(--ref-line); background:#060a07; }
+.reference-landing .ref-footer-brand > .ref-logo { font-size:24px; }
+.reference-landing .ref-footer-brand > .ref-logo img { width:27px; height:27px; }
+.reference-landing .ref-footer-brand > p { margin-top:18px; }
+.reference-landing .ref-footer-brand .ref-footer-note { margin-top:14px; max-width:290px; line-height:1.75; font-size:11px; }
+.reference-landing .ref-footer > nav { padding-top:2px; gap:40px; }
+.reference-landing .ref-footer nav strong { font-size:9px; margin-bottom:4px; letter-spacing:1.2px; }
+.reference-landing .ref-footer nav a { font-size:12px; }
+.ref-footer-signature { grid-column:1/-1; display:flex; justify-content:space-between; align-items:flex-end; gap:32px; padding:24px 0 36px; border-top:1px solid var(--ref-line); overflow:hidden; }
+.ref-footer-signature > span { font-size:clamp(100px,17vw,224px); font-weight:500; color:#91b59c; line-height:.82; letter-spacing:-.075em; margin-left:-.045em; }
+.ref-footer-signature > div { color:#83998b; font-size:12px; line-height:1.85; padding-bottom:8px; }
+.reference-landing .ref-footer-bottom { grid-column:1/-1; margin:0; padding-top:22px; gap:20px; }
+.ref-studio-credit a { display:inline-flex; gap:4px; align-items:center; color:#d9e5dd; text-decoration:none; }
+.ref-studio-credit a:hover { color:#91b59c; }
+@media(max-width:1100px) {
+ .reference-landing .use-case-copy { padding-inline:30px; }
+ .reference-landing .use-case-visual { padding-inline:30px; }
+ .reference-landing .ref-nav { right:24px; }
+}
+@media(max-width:899px), (max-height:699px) {
+ .reference-timeline .timeline-intro { margin-bottom:30px; }
+}
+@media(max-width:760px) {
+ .reference-landing .ref-header { height:54px; padding-inline:20px; }
+ .reference-landing .ref-nav { right:20px; }
+ .reference-landing .use-case-section { border-inline:0; }
+ .reference-landing .use-case-copy { padding:50px 24px 36px; }
+ .reference-landing .use-case-visual { min-height:760px; padding:46px 28px; }
+ .reference-landing .use-case-demo { padding:20px; }
+ .reference-landing .visual-mode { margin-top:14px; }
+ .reference-landing .ref-closing { grid-template-columns:1fr; gap:22px; padding:56px 24px; }
+ .reference-landing .ref-closing h2 { grid-row:auto; margin:4px 0 0; font-size:40px; }
+ .reference-landing .ref-closing > p { margin:0; }
+ .reference-landing .ref-footer { padding:38px 24px 22px; gap:32px; border-inline:0; }
+ .ref-footer-signature { gap:16px; padding:24px 0 28px; }
+ .ref-footer-signature > span { font-size:clamp(100px,24vw,180px); }
+ .ref-footer-signature > div { font-size:10px; }
+}
+@media(max-width:400px) {
+ .ref-footer-signature > div { display:none; }
+ .reference-landing .demo-tag { font-size:7px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .reference-timeline .timeline-intro,.reference-timeline .timeline-story,.timeline-explore > summary svg { transition:none!important; transform:none!important; }
+}
+/* All examples share a grid cell: reserve the tallest composition without covering rows. */
+.reference-landing .demo-scene { position:relative; inset:auto; grid-area:1/1; align-self:start; display:flex; flex-direction:column; gap:10px; }
+.reference-timeline[data-intro='true'] .teardown-callouts { opacity:0; }

@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {timelineComposition} from './timeline';
 import {teardownCenterLift,teardownParts,assembledLayers} from './generated/teardown';
 
 test('teardown keeps four complete, local plates with finite projection anchors',()=>{
@@ -23,6 +24,20 @@ test('annotation anchors stay within the drawing at intermediate and reverse-scr
   for(const part of teardownParts){
    const x=part.anchor[0],y=part.anchor[1]+part.lift*p+teardownCenterLift*(1-p);
    assert.ok(Number.isFinite(y));assert.ok(x>=50&&x<=370);assert.ok(y>=0&&y<=297);
+  }
+ }
+});
+
+test('focused timeline joints keep every annotation within the actual cropped viewport',()=>{
+ for(let sample=0;sample<=250;sample++){
+  const p=sample/250,pose=timelineComposition(p);
+  const offsets=pose.offsets.map(n=>n*teardownParts[1].lift);
+  const pan=teardownCenterLift-offsets.at(-1)!/2;
+  for(let index=0;index<teardownParts.length;index++){
+   const part=teardownParts[index],y=part.anchor[1]+offsets[index]+pan;
+   assert.ok(part.anchor[0]>=80&&part.anchor[0]<=340);
+   assert.ok(y>=0&&y<=297,`anchor ${part.id} remains visible at ${p}`);
+   if(index)assert.ok(offsets[index]<offsets[index-1],'plates keep their assembled ordering');
   }
  }
 });
