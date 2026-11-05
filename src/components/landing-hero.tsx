@@ -60,12 +60,12 @@ export function LandingHero() {
     <div className="hero-ascii" aria-hidden="true">{phase !== 'waiting' && <GradientASCII colors={palette} characters=" /+x01$#" cellSize={16} density={.7} glyphOpacity={.95} gradientOpacity={.5} glow={.08} flow={.3} flicker={.08} speed={.5} grain={.025} dpr={1.25} onComplete={complete}/>}</div>
     <div className="ref-hero">
       <div className="ref-hero-copy">
-        <p className="eyebrow"><Decode text="CLAREZA PARA A VIDA REAL" play={revealed}/></p>
-        <h1><Decode text="O seu dinheiro." play={revealed}/><br/><Decode text="Um novo" play={revealed}/>{' '}<span><Decode text="ponto de vista." play={revealed}/></span></h1>
-        <p><Decode text="Registre o que acontece hoje." play={revealed}/><br/><Decode text="Entenda o que está por vir." play={revealed}/><br/><Decode text="Encontre seu próximo passo." play={revealed}/></p>
-        <div className="ref-hero-actions"><Link href="/app" className="primary"><MotionLabel>Começar a organizar</MotionLabel><ArrowRight size={17}/></Link><a href="#camadas" className="secondary"><MotionLabel>Explore o Prumo</MotionLabel><ArrowUpRight size={16}/></a></div>
+        <p className="eyebrow"><Decode text="CONTROLE FINANCEIRO PESSOAL" play={revealed}/></p>
+        <h1><Decode text="Veja o que entra." play={revealed}/><br/><Decode text="Saiba o que" play={revealed}/>{' '}<span><Decode text="sobra." play={revealed}/></span></h1>
+        <p><Decode text="Acompanhe o saldo das suas contas." play={revealed}/><br/><Decode text="Veja o que vence nos próximos dias." play={revealed}/><br/><Decode text="Separe dinheiro para suas metas." play={revealed}/></p>
+        <div className="ref-hero-actions"><Link href="/app" className="primary"><MotionLabel>Abrir o Prumo</MotionLabel><ArrowRight size={17}/></Link><a href="#camadas" className="secondary"><MotionLabel>Como funciona</MotionLabel><ArrowUpRight size={16}/></a></div>
       </div>
-      <a className="ref-hero-note" href="#instalar"><span/><MotionLabel>SEU ESPAÇO. ONDE VOCÊ ESTIVER.</MotionLabel><ArrowUpRight size={14}/></a>
+      <a className="ref-hero-note" href="#instalar"><span/><MotionLabel>INSTALAR NO DISPOSITIVO</MotionLabel><ArrowUpRight size={14}/></a>
     </div>
     {phase !== 'content' && <button className="hero-skip-intro" onClick={complete}><MotionLabel>Pular apresentação</MotionLabel> <ArrowRight size={13}/></button>}
   </section>;
