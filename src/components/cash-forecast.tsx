@@ -1,0 +1,11 @@
+'use client';
+import {useState} from 'react';
+import {CalendarRange,Info} from 'lucide-react';
+import type {FinanceData} from '@/lib/finance';
+import {projectCashFlow} from '@/lib/planning';
+export function CashForecast({data,today,format}:{data:FinanceData;today:string;format:(n:number)=>string}){
+ const [includeIncome,setIncludeIncome]=useState(false);
+ const months=projectCashFlow(data,today);
+ const firstNegative=months.find(m=>(includeIncome?m.expected:m.conservative)<0);
+ return <section className="card forecast"><div className="section-title"><div><h3>Seu dinheiro nos próximos meses</h3><p className="muted">Próximos 6 meses · compromissos registrados</p></div><CalendarRange size={22} className="muted"/></div><label className="forecast-toggle"><input type="checkbox" checked={includeIncome} onChange={e=>setIncludeIncome(e.target.checked)}/><span>Incluir receitas ainda não recebidas na projeção</span></label><p className="forecast-method"><Info size={15}/>{includeIncome?'Cenário com recebimentos previstos: esses valores ainda não fazem parte do seu saldo.':'Cenário conservador: parte do saldo atual, desconta reservas e despesas pendentes. Nenhuma receita futura é presumida.'}</p><div className="forecast-grid">{months.map((m,index)=>{const projected=includeIncome?m.expected:m.conservative;return <article className={`forecast-month ${projected<0?'forecast-negative':''}`} key={m.month}><p className="eyebrow">{new Date(m.month+'-01T12:00:00Z').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</p><dl><div><dt>A pagar</dt><dd>{format(m.expense)}</dd></div><div><dt>Em parcelas</dt><dd>{format(m.installments)}</dd></div>{includeIncome&&<div><dt>A receber</dt><dd>{format(m.income)}</dd></div>}</dl><span className="muted">Saldo projetado após reservas</span><strong>{format(projected)}</strong>{index===0&&<small>Inclui pendências vencidas.</small>}</article>})}</div>{firstNegative&&<p className="forecast-alert">Os compromissos registrados ultrapassam o saldo projetado em {new Date(firstNegative.month+'-01T12:00:00Z').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}. Revise os próximos pagamentos.</p>}<p className="muted forecast-disclaimer">Projeção, não garantia de saldo. Não inclui despesas ou receitas que ainda não foram registradas. “Em parcelas” já faz parte de “A pagar”.</p></section>;
+}

@@ -338,3 +338,26 @@ header > div:first-child { min-width: 0; }
 .migration-banner h3 { font-size: 15px; }
 .migration-banner p { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 6px; max-width: 680px; }
 @media(max-width:640px) { .migration-banner { flex-wrap: wrap; gap: 14px; padding: 20px; } .migration-banner .primary,.migration-banner .secondary { width: 100%; } .migration-banner > div { min-width: calc(100% - 55px); } }
+
+.installment-badge { display: inline-flex; margin-left: 8px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 9px; font-weight: 500; vertical-align: middle; }
+.installment-note { padding: 12px; background: var(--surface-secondary); border-radius: 10px; font-size: 12px; color: var(--muted); }
+.installment-delete { color: var(--negative); text-align: left; }
+.forecast { margin-top: 24px; }
+.forecast-toggle { display: flex; flex-direction: row; align-items: center; gap: 10px; margin: 24px 0 12px; font-size: 12px; cursor: pointer; min-height: 44px; }
+.forecast-toggle input { width: 18px; height: 18px; min-height: 18px; accent-color: var(--brand); flex: none; }
+.forecast-method { display: flex; gap: 8px; align-items: flex-start; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.forecast-method svg { flex: none; margin-top: 3px; }
+.forecast-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin-top: 22px; }
+.forecast-month { min-width: 0; border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.forecast-month dl { margin: 18px 0; display: flex; flex-direction: column; gap: 10px; }
+.forecast-month dl > div { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; }
+.forecast-month dt { color: var(--muted); }
+.forecast-month dd { margin: 0; font-variant-numeric: tabular-nums; }
+.forecast-month > .muted { font-size: 10px; }
+.forecast-month strong { display: block; font-size: 24px; font-weight: 500; letter-spacing: -.6px; margin-top: 8px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.forecast-month small { display: block; font-size: 10px; margin-top: 12px; }
+.forecast-negative strong, .forecast-alert { color: var(--negative); }
+.forecast-alert { font-size: 12px; line-height: 1.7; margin-top: 20px; }
+.forecast-disclaimer { font-size: 11px; line-height: 1.7; margin-top: 20px; }
+@media(max-width:960px) { .forecast-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) { .forecast-grid { grid-template-columns: 1fr; } .forecast-month { padding: 20px; } }

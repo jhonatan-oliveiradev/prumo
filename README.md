@@ -52,3 +52,14 @@ O modo local continua usando a chave anterior. Depois de entrar, o cache é sepa
 Configuração: copie `.env.example`, preencha `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ bytes aleatórios) e `BETTER_AUTH_URL` com a origem exata. Rode `npm ci`, `npm run db:migrate`, `npm run build`. Configure as mesmas variáveis na Vercel, com banco e segredo separados para Preview e Production. Migrations são uma etapa explícita, não executadas em todo build. O driver Neon usa WebSocket TLS para ambientes serverless. Endpoints de sessão e dados nunca são armazenados pelo service worker.
 
 Limites desta etapa: recuperação/verificação de e-mail e login social ainda não disponíveis; a interface informa a ausência de recuperação de senha. Há um workspace pessoal por conta; compartilhamento e integrações NX Home não são expostos. O schema inclui transferências, recorrências, importações e idempotência para evolução futura, mas não há endpoints para esses recursos. Orçamentos atuais continuam sendo limites recorrentes por categoria (intervalo persistido 1970–9999), não orçamentos por competência. A API aceita um snapshot versionado e persiste entidades normalizadas; APIs de operações granulares virão depois. Offline após recarregar sem acesso ao servidor pode abrir o modo local; rascunhos de conta permanecem isolados e são recuperados ao entrar novamente.
+
+
+## Parcelamento e projeção
+
+Novas despesas podem ser divididas em até 60 parcelas mensais a partir do valor total informado. Centavos restantes são distribuídos nas primeiras parcelas, preservando o total exato. Vencimentos no fim do mês são limitados ao último dia disponível sem perder a referência original (31/jan → 28/fev → 31/mar). A situação escolhida aplica-se só à primeira parcela; as demais são pendentes.
+
+Cada parcela pode ser editada e paga separadamente. No editor, é possível excluir esta e as próximas parcelas pendentes da compra, preservando parcelas pagas, com desfazer. A exclusão simples da linha continua afetando apenas aquela parcela.
+
+Em Compromissos, a projeção parte do mês atual e considera os próximos seis meses, independentemente do filtro mensal do extrato. O cenário conservador usa saldo atual menos reservas e despesas pendentes, incluindo vencidos uma única vez no primeiro mês. Receitas pendentes só entram no cenário alternativo opt-in. Não são presumidos salários recorrentes, despesas não cadastradas ou rendimentos. Os valores em parcelas já integram A pagar.
+
+A metadata de parcelamento é opcional em `FinanceData` v1, mantendo compatibilidade de backups. A migration `20261105003000_installments` adiciona três colunas nullable e uma validação de coerência em Transaction. Nenhuma conta ou lançamento existente é alterado. Compartilhamento, cartões e geração automática de recorrências continuam fora desta entrega.
