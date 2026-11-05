@@ -14,7 +14,7 @@ export function LandingMotion(){
    '.ref-product-directory h2','.ref-product-directory .eyebrow','.directory-group',
    '.ref-advisor-copy > *','.ref-advisor-art','.ref-start-section h2',
    '.ref-start-section .eyebrow','.ref-start-links > a','.ref-closing > *',
-   '.ref-footer-brand','.ref-footer nav > div','.ref-footer-signature','.ref-footer-bottom',
+   '.prumo-footer-brand','.prumo-footer-nav > div','.prumo-footer-bottom',
   ].join(',');
   const reset=()=>{observer?.disconnect();animations.forEach(a=>a.cancel());animations.clear();pending.forEach(el=>{el.style.removeProperty('opacity');});pending.clear();};
   const reveal=(el:HTMLElement,delay=0)=>{
