@@ -63,3 +63,15 @@ Cada parcela pode ser editada e paga separadamente. No editor, é possível excl
 Em Compromissos, a projeção parte do mês atual e considera os próximos seis meses, independentemente do filtro mensal do extrato. O cenário conservador usa saldo atual menos reservas e despesas pendentes, incluindo vencidos uma única vez no primeiro mês. Receitas pendentes só entram no cenário alternativo opt-in. Não são presumidos salários recorrentes, despesas não cadastradas ou rendimentos. Os valores em parcelas já integram A pagar.
 
 A metadata de parcelamento é opcional em `FinanceData` v1, mantendo compatibilidade de backups. A migration `20261105003000_installments` adiciona três colunas nullable e uma validação de coerência em Transaction. Nenhuma conta ou lançamento existente é alterado. Compartilhamento, cartões e geração automática de recorrências continuam fora desta entrega.
+
+## Recorrências e conselheiro Gemini
+
+Recorrências semanais, mensais e anuais geram lançamentos pendentes até seis meses à frente ao salvar uma regra e ao abrir o aplicativo. IDs determinísticos e checkpoint persistido impedem duplicidades e recriação de ocorrências excluídas. Pausar remove somente ocorrências futuras pendentes; editar afeta as próximas; pagamentos confirmados e vencidos são preservados. Retomar não cobra retroativamente o período pausado. A geração depende de abrir o app; não há cron nem pagamento automático.
+
+O Conselheiro é somente leitura e usa Gemini via REST no servidor. Configure `GEMINI_API_KEY` como variável criptografada na Vercel (Production; Preview somente se quiser testar nesse ambiente) e faça novo deploy. `GEMINI_MODEL` é opcional, padrão `gemini-2.5-flash`; disponibilidade/cota dependem da conta Google. Nunca use prefixo NEXT_PUBLIC para a chave nem a inclua no código. Sem chave, a interface informa a configuração pendente.
+
+Cada análise exige sessão autenticada, sincronização concluída e consentimento explícito. O backend lê o workspace autorizado e prepara indicadores gerais sem identificação, nomes, descrições, extratos, categorias sensíveis ou valores exatos. O usuário escolhe uma de quatro perguntas predefinidas; não há envio de texto livre. O backend verifica se os indicadores são os mesmos apresentados na interface e aplica o filtro pessoal/trabalho. Respostas não modificam dados nem executam ações. Há limite atômico de 10 solicitações por conta/dia (fuso São Paulo), limite de saída e timeout; tentativas que falham também contam. Não existe fallback para outro modelo/provedor pago. As cotas do Google também se aplicam.
+
+A interface informa que entradas/respostas do plano gratuito podem ser usadas pelo Google para melhorar produtos e permite inspecionar os indicadores enviados. A análise é aproximada e não substitui decisões pessoais. Nenhuma solicitação real ao Google foi executada durante a implementação; testes do transporte usam respostas simuladas.
+
+Referências: https://ai.google.dev/gemini-api/terms e https://ai.google.dev/api/generate-content.
