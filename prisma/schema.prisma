@@ -187,27 +187,30 @@ model Category {
 }
 
 model Transaction {
-  space            String            @default("personal")
-  clientId         String
-  id               String            @id @default(cuid())
-  workspaceId      String
-  accountId        String
-  categoryId       String?
-  transferId       String?
-  recurringRuleId  String?
-  importBatchId    String?
-  kind             TransactionKind
-  status           TransactionStatus @default(CLEARED)
-  amountMinor      BigInt
-  currency         String            @default("BRL") @db.VarChar(3)
-  title            String
-  note             String?
-  occurredOn       DateTime          @db.Date
-  clearedAt        DateTime?
-  importSource     String?
-  importExternalId String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  installmentGroupId String?
+  installmentNumber  Int?
+  installmentCount   Int?
+  space              String            @default("personal")
+  clientId           String
+  id                 String            @id @default(cuid())
+  workspaceId        String
+  accountId          String
+  categoryId         String?
+  transferId         String?
+  recurringRuleId    String?
+  importBatchId      String?
+  kind               TransactionKind
+  status             TransactionStatus @default(CLEARED)
+  amountMinor        BigInt
+  currency           String            @default("BRL") @db.VarChar(3)
+  title              String
+  note               String?
+  occurredOn         DateTime          @db.Date
+  clearedAt          DateTime?
+  importSource       String?
+  importExternalId   String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   account       Account        @relation(fields: [accountId], references: [id])
@@ -222,6 +225,7 @@ model Transaction {
   @@index([accountId, occurredOn])
   @@index([categoryId, occurredOn])
   @@index([transferId])
+  @@index([workspaceId, installmentGroupId])
 }
 
 model Transfer {

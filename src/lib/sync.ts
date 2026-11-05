@@ -13,6 +13,10 @@ export function parseWorkspaceInput(value:unknown):{data:FinanceData;revision:nu
   if(d.accounts.some(a=>!a.name||a.name.length>100)||d.goals.some(g=>!g.name||g.name.length>100)||d.transactions.some(t=>!t.description||t.description.length>200))return null;
   if(JSON.stringify(input).length>MAX_SYNC_BYTES)return null;
   if(new Set(d.budgets.map(b=>b.category)).size!==d.budgets.length)return null;
+  const installmentKeys=d.transactions.filter(t=>t.installment).map(t=>`${t.installment!.groupId}:${t.installment!.number}`);
+  if(new Set(installmentKeys).size!==installmentKeys.length)return null;
+  const groupCounts=new Map<string,number>();
+  for(const t of d.transactions){if(t.installment){const old=groupCounts.get(t.installment.groupId);if(old!==undefined&&old!==t.installment.count)return null;groupCounts.set(t.installment.groupId,t.installment.count);}}
   const sum=[...d.accounts.map(a=>a.openingBalance),...d.transactions.map(t=>t.amount),...d.goals.flatMap(g=>[g.saved,g.target]),...d.budgets.map(b=>b.limit)].reduce((total,n)=>total+BigInt(n),0n);
   if(sum>BigInt(Number.MAX_SAFE_INTEGER))return null;
   return {data:d,revision:input.revision};

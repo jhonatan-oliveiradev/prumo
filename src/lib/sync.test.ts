@@ -32,3 +32,13 @@ test('Prisma schema includes every field required by the installed auth version'
   for(const [name,field] of Object.entries(table.fields))assert.ok(model.fields.some(f=>f.name===(field.fieldName??name)),`Missing field ${table.modelName}.${name}`);
  }
 });
+
+test('installment metadata remains optional and rejects duplicate positions',()=>{
+ const transaction={id:'one',description:'Parcela',amount:100,type:'expense',category:'Outros',date:'2026-11-05',accountId:'a',status:'pending',space:'personal',installment:{groupId:'g',number:1,count:3}};
+ const data={...emptyData,accounts:[{id:'a',name:'Conta',openingBalance:0}],transactions:[transaction]};
+ assert.ok(parseWorkspaceInput({data,revision:0}));
+ assert.equal(parseWorkspaceInput({data:{...data,transactions:[transaction,{...transaction,id:'two'}]},revision:0}),null);
+ assert.equal(parseWorkspaceInput({data:{...data,transactions:[{...transaction,installment:{groupId:'g',number:4,count:3}}]},revision:0}),null);
+ assert.equal(parseWorkspaceInput({data:{...data,transactions:[{...transaction,type:'income'}]},revision:0}),null);
+ assert.ok(parseWorkspaceInput({data:{...data,transactions:[{...transaction,installment:undefined}]},revision:0}));
+});
