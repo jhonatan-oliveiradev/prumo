@@ -1,3 +1,4 @@
+import {filterFinanceSpace} from '@/lib/finance';
 import {randomUUID} from 'node:crypto';
 import {getAuth,cloudEnabled} from '@/lib/server/auth';
 import {readWorkspace} from '@/lib/server/workspace';
@@ -26,7 +27,7 @@ export async function POST(request:Request){
   if(!input||input.consent!==true||!input.task||!Object.hasOwn(advisorTasks,input.task)||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month??'')||!['all','personal','work'].includes(input.space??''))throw new AdvisorError('Confirme o envio dos indicadores e selecione uma análise.',400);
   const workspace=await readWorkspace(session.user.id);if(!workspace)throw new AdvisorError('Sincronize seus dados antes de pedir uma análise.',409);
   const today=new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
-  const visible={...workspace.data,transactions:workspace.data.transactions.filter(t=>input.space==='all'||t.space===input.space)};
+  const visible=filterFinanceSpace(workspace.data,input.space!);
   const indicators=buildAdvisorContext(visible,input.month!,today);
   if(input.contextSignature!==JSON.stringify(indicators))throw new AdvisorError('Os indicadores mudaram. Atualize os dados e confirme o envio novamente.',409);
   const day=today,key=`advisor:${session.user.id}:${day}`;

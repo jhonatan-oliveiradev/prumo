@@ -115,6 +115,7 @@ model Workspace {
   accounts           Account[]
   categories         Category[]
   transactions       Transaction[]
+  creditCards        CreditCard[]
   transfers          Transfer[]
   budgets            Budget[]
   goals              Goal[]
@@ -186,6 +187,39 @@ model Category {
   @@index([parentId])
 }
 
+model CreditCard {
+  id          String @id
+  clientId    String
+  workspaceId String
+  name        String
+  color       String
+  limitMinor  BigInt
+  closingDay  Int
+  dueDay      Int
+  space       String @default("personal")
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  purchases CreditPurchase[]
+  payments  Transaction[]
+
+  @@unique([workspaceId, clientId])
+}
+
+model CreditPurchase {
+  id           String   @id
+  clientId     String
+  cardId       String
+  description  String
+  amountMinor  BigInt
+  purchasedOn  DateTime @db.Date
+  category     String
+  installments Int
+
+  card CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, clientId])
+}
+
 model Transaction {
   recurringScheduledOn DateTime?         @db.Date
   installmentGroupId   String?
@@ -196,6 +230,8 @@ model Transaction {
   id                   String            @id @default(cuid())
   workspaceId          String
   accountId            String
+  creditCardId         String?
+  creditInvoiceCycle   String?
   categoryId           String?
   transferId           String?
   recurringRuleId      String?
@@ -218,8 +254,10 @@ model Transaction {
   category      Category?      @relation(fields: [categoryId], references: [id])
   transfer      Transfer?      @relation(fields: [transferId], references: [id])
   recurringRule RecurringRule? @relation(fields: [recurringRuleId], references: [id])
+  creditCard    CreditCard?    @relation(fields: [creditCardId], references: [id], onDelete: NoAction)
   importBatch   ImportBatch?   @relation(fields: [importBatchId], references: [id])
 
+  @@unique([creditCardId, creditInvoiceCycle])
   @@unique([workspaceId, importSource, importExternalId])
   @@unique([workspaceId, clientId])
   @@unique([workspaceId, recurringRuleId, recurringScheduledOn])

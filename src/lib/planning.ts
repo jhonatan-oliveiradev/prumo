@@ -1,3 +1,4 @@
+import {creditInvoices} from './credit';
 import {summary,type FinanceData,type Transaction} from './finance';
 
 export function addMonthsClamped(date:string,offset:number){
@@ -25,12 +26,14 @@ export function projectCashFlow(data:FinanceData,today:string,months=6){
  const start=today.slice(0,7)+'-01';
  const {balance,reserved}=summary(data,today.slice(0,7));
  let conservative=balance-reserved,expected=conservative;
+ const invoices=creditInvoices(data).filter(invoice=>!invoice.payment);
  return Array.from({length:months},(_,index)=>{
   const date=addMonthsClamped(start,index),next=addMonthsClamped(start,index+1);
   const pending=data.transactions.filter(t=>t.status==='pending'&&t.date<next&&(index===0||t.date>=date));
   const income=pending.filter(t=>t.type==='income').reduce((sum,t)=>sum+t.amount,0);
-  const expense=pending.filter(t=>t.type==='expense').reduce((sum,t)=>sum+t.amount,0);
-  const installments=pending.filter(t=>t.type==='expense'&&t.installment).reduce((sum,t)=>sum+t.amount,0);
+  const cardBills=invoices.filter(i=>i.dueOn<next&&(index===0||i.dueOn>=date));
+  const expense=pending.filter(t=>t.type==='expense').reduce((sum,t)=>sum+t.amount,0)+cardBills.reduce((sum,i)=>sum+i.amount,0);
+  const installments=pending.filter(t=>t.type==='expense'&&t.installment).reduce((sum,t)=>sum+t.amount,0)+cardBills.flatMap(i=>i.items).filter(item=>item.purchase.installments>1).reduce((sum,item)=>sum+item.amount,0);
   conservative-=expense;expected+=income-expense;
   return {month:date.slice(0,7),income,expense,installments,conservative,expected};
  });

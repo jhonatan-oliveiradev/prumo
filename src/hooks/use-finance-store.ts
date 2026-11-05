@@ -34,7 +34,7 @@ export function useFinanceStore(){
   mounted.current=true;
   async function initialize(){
    let guest=emptyData;
-   try{const raw=localStorage.getItem(GUEST_KEY);if(raw){const parsed=JSON.parse(raw);if(!isFinanceData(parsed))throw Error('Dados locais inválidos.');guest=parsed;}setLocalAvailable(guest.accounts.length>0||guest.transactions.length>0||guest.goals.length>0||guest.budgets.length>0);}
+   try{const raw=localStorage.getItem(GUEST_KEY);if(raw){const parsed=JSON.parse(raw);if(!isFinanceData(parsed))throw Error('Dados locais inválidos.');guest=parsed;}setLocalAvailable(guest.accounts.length>0||guest.transactions.length>0||guest.goals.length>0||guest.budgets.length>0||Boolean(guest.creditCards?.length));}
    catch{setStorageError(true);setMessage('Não foi possível ler os dados locais. Eles não foram substituídos.');}
    setData(guest);current.current={data:guest,revision:0,dirty:false};
    try{
