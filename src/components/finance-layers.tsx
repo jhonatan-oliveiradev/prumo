@@ -1,4 +1,5 @@
 'use client';
+import {MotionLabel} from './motion-label';
 
 import {useEffect,useRef,useState} from 'react';
 import {ArrowUpRight,Wallet,CalendarDays,Sparkles,ChartNoAxesCombined,Layers,RotateCcw,Plus} from 'lucide-react';
@@ -75,8 +76,8 @@ export function FinanceLayers(){
  return <section className="finance-layers living-timeline fluid-timeline reference-timeline" id="camadas" ref={root} data-enhanced={enhanced} data-active={active} data-intro={intro}>
   <div className="timeline-stage">
    <div className="timeline-copy"><div className="timeline-intro" aria-hidden={enhanced&&!intro}><p className="eyebrow">UM PLANO QUE SE CONSTRÓI</p><h2>As partes encontram<br/>o seu lugar.</h2><p>Registros, compromissos e escolhas. Cada parte se conecta para você enxergar o seu dinheiro por inteiro.</p></div>
-    <div className="timeline-track" role="group" aria-label="Etapas do Prumo"><span className="timeline-track-fill"/>{layers.map((layer,index)=><button key={layer.label} onClick={()=>select(index)} aria-pressed={active===index}><i/><span>{String(index+1).padStart(2,'0')} · {layer.label}</span></button>)}</div>
-    <div className="timeline-stories">{layers.map((layer,index)=>{const Icon=layer.Icon;return <article className={`timeline-story ${active===index?'active':''}`} key={layer.label} style={{'--story-index':index} as React.CSSProperties} aria-hidden={enhanced&&(intro||active!==index)} inert={enhanced&&(intro||active!==index)}><span className="timeline-story-label">{String(index+1).padStart(2,'0')} · {layer.label}</span><Icon size={22}/><h3>{layer.title}</h3><p>{layer.detail}</p><div className="timeline-feature-tags">{layer.features.map(feature=><span key={feature}>{feature}</span>)}</div><a className="ref-text-link" href="/app">Abrir meu espaço <ArrowUpRight size={15}/></a></article>;})}</div>
+    <div className="timeline-track" role="group" aria-label="Etapas do Prumo"><span className="timeline-track-fill"/>{layers.map((layer,index)=><button key={layer.label} onClick={()=>select(index)} aria-pressed={active===index}><i/><MotionLabel>{`${String(index+1).padStart(2,'0')} · ${layer.label}`}</MotionLabel></button>)}</div>
+    <div className="timeline-stories">{layers.map((layer,index)=>{const Icon=layer.Icon;return <article className={`timeline-story ${active===index?'active':''}`} key={layer.label} style={{'--story-index':index} as React.CSSProperties} aria-hidden={enhanced&&(intro||active!==index)} inert={enhanced&&(intro||active!==index)}><span className="timeline-story-label">{String(index+1).padStart(2,'0')} · {layer.label}</span><Icon size={22}/><h3>{layer.title}</h3><p>{layer.detail}</p><div className="timeline-feature-tags">{layer.features.map(feature=><span key={feature}>{feature}</span>)}</div><a className="ref-text-link" href="/app"><MotionLabel>Abrir meu espaço</MotionLabel> <ArrowUpRight size={15}/></a></article>;})}</div>
     <p className="timeline-instruction">{enhanced?'Role para ver o seu plano ganhar forma. Volte para reunir as partes.':'Cada parte ajuda você a cuidar do próximo passo.'}</p>
    </div>
    <figure className="timeline-drawing"><div className="layers-dots" aria-hidden="true"/>
@@ -87,7 +88,7 @@ export function FinanceLayers(){
      </g>;})}
     </svg>
     <figcaption><span>REGISTRE · ORGANIZE · PLANEJE · DECIDA</span><strong>{layers[active].tag}</strong><small>Quatro partes. Um ponto de vista.</small></figcaption>
-    <details className="timeline-explore"><summary><Layers size={13}/>Explorar as camadas<Plus size={13}/></summary><div className="timeline-drawing-controls"><div className="timeline-assembly-buttons"><button className="secondary" onClick={()=>spacing(0)}><RotateCcw size={14}/>Reunir</button><button className="secondary" onClick={()=>spacing(1)}><Layers size={14}/>Separar</button></div><label><span>Separação das camadas</span><input ref={input} aria-label="Separação das camadas" type="range" min="0" max="100" defaultValue="100" onChange={e=>spacing(Number(e.target.value)/100)}/><output ref={output} aria-hidden="true">100%</output></label>{manual&&enhanced&&<small>Explore livremente. A rolagem retoma a sequência.</small>}</div></details>
+    <details className="timeline-explore"><summary><Layers size={13}/><MotionLabel>Explorar as camadas</MotionLabel><Plus size={13}/></summary><div className="timeline-drawing-controls"><div className="timeline-assembly-buttons"><button className="secondary" onClick={()=>spacing(0)}><RotateCcw size={14}/><MotionLabel>Reunir</MotionLabel></button><button className="secondary" onClick={()=>spacing(1)}><Layers size={14}/><MotionLabel>Separar</MotionLabel></button></div><label><span>Separação das camadas</span><input ref={input} aria-label="Separação das camadas" type="range" min="0" max="100" defaultValue="100" onChange={e=>spacing(Number(e.target.value)/100)}/><output ref={output} aria-hidden="true">100%</output></label>{manual&&enhanced&&<small>Explore livremente. A rolagem retoma a sequência.</small>}</div></details>
    </figure>
   </div>
  </section>;

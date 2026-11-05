@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import {MotionLabel} from './motion-label';
 import {ArrowRight, ArrowUpRight} from 'lucide-react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import GradientASCII from './gradient-ascii';
@@ -62,10 +63,10 @@ export function LandingHero() {
         <p className="eyebrow"><Decode text="CLAREZA PARA A VIDA REAL" play={revealed}/></p>
         <h1><Decode text="O seu dinheiro." play={revealed}/><br/><Decode text="Um novo" play={revealed}/>{' '}<span><Decode text="ponto de vista." play={revealed}/></span></h1>
         <p><Decode text="Registre o que acontece hoje." play={revealed}/><br/><Decode text="Entenda o que está por vir." play={revealed}/><br/><Decode text="Encontre seu próximo passo." play={revealed}/></p>
-        <div className="ref-hero-actions"><Link href="/app" className="primary"><Decode text="Começar a organizar" play={revealed}/><ArrowRight size={17}/></Link><a href="#camadas" className="secondary"><Decode text="Explore o Prumo" play={revealed}/><ArrowUpRight size={16}/></a></div>
+        <div className="ref-hero-actions"><Link href="/app" className="primary"><MotionLabel>Começar a organizar</MotionLabel><ArrowRight size={17}/></Link><a href="#camadas" className="secondary"><MotionLabel>Explore o Prumo</MotionLabel><ArrowUpRight size={16}/></a></div>
       </div>
-      <a className="ref-hero-note" href="#instalar"><span/>SEU ESPAÇO. ONDE VOCÊ ESTIVER.<ArrowUpRight size={14}/></a>
+      <a className="ref-hero-note" href="#instalar"><span/><MotionLabel>SEU ESPAÇO. ONDE VOCÊ ESTIVER.</MotionLabel><ArrowUpRight size={14}/></a>
     </div>
-    {phase !== 'content' && <button className="hero-skip-intro" onClick={complete}>Pular apresentação <ArrowRight size={13}/></button>}
+    {phase !== 'content' && <button className="hero-skip-intro" onClick={complete}><MotionLabel>Pular apresentação</MotionLabel> <ArrowRight size={13}/></button>}
   </section>;
 }

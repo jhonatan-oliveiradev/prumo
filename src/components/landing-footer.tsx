@@ -1,4 +1,6 @@
+import type {CSSProperties} from 'react';
 import Link from 'next/link';
+import {MotionLabel} from './motion-label';
 import {ArrowUpRight, WifiOff} from 'lucide-react';
 
 const width = 1440;
@@ -59,21 +61,27 @@ function FooterArtwork() {
       </defs>
       <g clipPath="url(#prumo-footer-silhouette)">
         <rect width={width} height={height} fill="#101b14" />
-        {rings.map(({id, index}) => index % 3 === 1 ? (
-          <text key={id} fill="#d3e6d5" fontSize={19 + (index % 4)} letterSpacing="2" opacity={index % 2 === 0 ? '.88' : '.68'}>
-            <textPath href={`#${id}`} startOffset={`${(index * 7) % 13}%`}>
-              {phrases[Math.floor(index / 3) % phrases.length].repeat(9)}
-            </textPath>
-          </text>
-        ) : (
-          <use key={id} href={`#${id}`} fill="none" stroke="#a4c1ac" strokeWidth="1.2" strokeDasharray=".5 15" strokeLinecap="round" opacity=".47" />
-        ))}
+        <g className="prumo-footer-ring-field">
+          {rings.map(({id, index}) => index % 3 === 1 ? (
+            <text key={id} className="prumo-footer-ring" style={{'--orbit-duration': `${12 + index % 7 * 2}s`, '--orbit-delay': `${-index * 1.6}s`} as CSSProperties} fill="#d3e6d5" fontSize={19 + (index % 4)} letterSpacing="2" opacity={index % 2 === 0 ? '.88' : '.68'}>
+              <textPath href={`#${id}`} startOffset={`${(index * 7) % 13}%`}>
+                {phrases[Math.floor(index / 3) % phrases.length].repeat(9)}
+              </textPath>
+            </text>
+          ) : (
+            <use key={id} href={`#${id}`} fill="none" stroke="#a4c1ac" strokeWidth="1.2" strokeDasharray=".5 15" strokeLinecap="round" opacity=".47" />
+          ))}
+        </g>
       </g>
       <g fontSize="8" textAnchor="middle">
-        {particles.map(({x, y, dark, glyph, tile, opacity}) => (
-          <g key={`${x}-${y}`} opacity={opacity}>
-            {tile && <rect x={x} y={y} width={cell} height={cell} fill={dark ? '#e8ede5' : '#101b14'} />}
-            <text x={x + cell / 2} y={y + 7} fill={dark !== tile ? '#c2d7c6' : '#405648'}>{glyph}</text>
+        {Array.from({length: 5}, (_, band) => (
+          <g key={band} className="prumo-footer-spark" style={{'--spark-delay': `${-band * 2.1}s`} as CSSProperties}>
+            {particles.filter((_, index) => index % 5 === band).map(({x, y, dark, glyph, tile, opacity}) => (
+              <g key={`${x}-${y}`} opacity={opacity}>
+                {tile && <rect x={x} y={y} width={cell} height={cell} fill={dark ? '#e8ede5' : '#101b14'} />}
+                <text x={x + cell / 2} y={y + 7} fill={dark !== tile ? '#c2d7c6' : '#405648'}>{glyph}</text>
+              </g>
+            ))}
           </g>
         ))}
       </g>
@@ -90,30 +98,30 @@ export function LandingFooter() {
           <div className="prumo-footer-brand">
             <Link href="/" className="ref-logo">
               <img src="/logo.svg" alt="" width="38" height="38" />
-              <span>prumo.</span>
+              <MotionLabel>prumo.</MotionLabel>
             </Link>
             <p className="prumo-footer-tagline">O seu dinheiro, no eixo.</p>
             <p className="prumo-footer-note">Ferramenta de organização financeira.<br />Não realiza pagamentos ou movimentações bancárias.</p>
-            <Link href="/app" className="prumo-footer-cta">Abrir meu espaço <ArrowUpRight size={16} aria-hidden="true" /></Link>
+            <Link href="/app" className="prumo-footer-cta"><MotionLabel>Abrir meu espaço</MotionLabel> <ArrowUpRight size={16} aria-hidden="true" /></Link>
           </div>
           <nav className="prumo-footer-nav" aria-label="Navegação de rodapé">
             <div>
               <p>Explore</p>
-              <a href="#camadas">Como funciona</a>
-              <a href="#recursos">Recursos</a>
-              <a href="#conselheiro">Conselheiro</a>
+              <a href="#camadas"><MotionLabel>Como funciona</MotionLabel></a>
+              <a href="#recursos"><MotionLabel>Recursos</MotionLabel></a>
+              <a href="#conselheiro"><MotionLabel>Conselheiro</MotionLabel></a>
             </div>
             <div>
               <p>Seu Prumo</p>
-              <a href="#instalar">Instalar PWA</a>
-              <a href="#conteudo">Voltar ao início <ArrowUpRight size={13} aria-hidden="true" /></a>
+              <a href="#instalar"><MotionLabel>Instalar PWA</MotionLabel></a>
+              <a href="#conteudo"><MotionLabel>Voltar ao início</MotionLabel> <ArrowUpRight size={13} aria-hidden="true" /></a>
             </div>
           </nav>
         </div>
         <div className="prumo-footer-bottom">
           <span>© Prumo · Um passo de cada vez.</span>
           <span><WifiOff size={14} aria-hidden="true" /> Com uma cópia local após abrir com internet.</span>
-          <span className="prumo-footer-credit">powered by <a href="https://enex.studio" target="_blank" rel="noopener noreferrer">NX Studio.<ArrowUpRight size={13} aria-hidden="true" /></a></span>
+          <span className="prumo-footer-credit">powered by <a href="https://enex.studio" target="_blank" rel="noopener noreferrer"><MotionLabel>NX Studio.</MotionLabel><ArrowUpRight size={13} aria-hidden="true" /></a></span>
         </div>
       </div>
     </footer>
