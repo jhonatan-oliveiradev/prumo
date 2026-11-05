@@ -187,30 +187,31 @@ model Category {
 }
 
 model Transaction {
-  installmentGroupId String?
-  installmentNumber  Int?
-  installmentCount   Int?
-  space              String            @default("personal")
-  clientId           String
-  id                 String            @id @default(cuid())
-  workspaceId        String
-  accountId          String
-  categoryId         String?
-  transferId         String?
-  recurringRuleId    String?
-  importBatchId      String?
-  kind               TransactionKind
-  status             TransactionStatus @default(CLEARED)
-  amountMinor        BigInt
-  currency           String            @default("BRL") @db.VarChar(3)
-  title              String
-  note               String?
-  occurredOn         DateTime          @db.Date
-  clearedAt          DateTime?
-  importSource       String?
-  importExternalId   String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  recurringScheduledOn DateTime?         @db.Date
+  installmentGroupId   String?
+  installmentNumber    Int?
+  installmentCount     Int?
+  space                String            @default("personal")
+  clientId             String
+  id                   String            @id @default(cuid())
+  workspaceId          String
+  accountId            String
+  categoryId           String?
+  transferId           String?
+  recurringRuleId      String?
+  importBatchId        String?
+  kind                 TransactionKind
+  status               TransactionStatus @default(CLEARED)
+  amountMinor          BigInt
+  currency             String            @default("BRL") @db.VarChar(3)
+  title                String
+  note                 String?
+  occurredOn           DateTime          @db.Date
+  clearedAt            DateTime?
+  importSource         String?
+  importExternalId     String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   account       Account        @relation(fields: [accountId], references: [id])
@@ -221,6 +222,7 @@ model Transaction {
 
   @@unique([workspaceId, importSource, importExternalId])
   @@unique([workspaceId, clientId])
+  @@unique([workspaceId, recurringRuleId, recurringScheduledOn])
   @@index([workspaceId, occurredOn, status])
   @@index([accountId, occurredOn])
   @@index([categoryId, occurredOn])
@@ -325,28 +327,32 @@ model GoalMovement {
 }
 
 model RecurringRule {
-  id          String             @id @default(cuid())
-  workspaceId String
-  accountId   String
-  categoryId  String?
-  kind        CategoryType
-  amountMinor BigInt
-  currency    String             @default("BRL") @db.VarChar(3)
-  title       String
-  interval    RecurrenceInterval
-  dayOfMonth  Int?
-  startsOn    DateTime           @db.Date
-  endsOn      DateTime?          @db.Date
-  nextRunOn   DateTime?          @db.Date
-  status      RecurrenceStatus   @default(ACTIVE)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  space String @default("personal")
+  clientId           String?
+  generatedThroughOn DateTime?          @db.Date
+  id                 String             @id @default(cuid())
+  workspaceId        String
+  accountId          String
+  categoryId         String?
+  kind               CategoryType
+  amountMinor        BigInt
+  currency           String             @default("BRL") @db.VarChar(3)
+  title              String
+  interval           RecurrenceInterval
+  dayOfMonth         Int?
+  startsOn           DateTime           @db.Date
+  endsOn             DateTime?          @db.Date
+  nextRunOn          DateTime?          @db.Date
+  status             RecurrenceStatus   @default(ACTIVE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   account      Account       @relation(fields: [accountId], references: [id])
   category     Category?     @relation(fields: [categoryId], references: [id])
   transactions Transaction[]
 
+  @@unique([workspaceId, clientId])
   @@index([workspaceId, status, nextRunOn])
 }
 
