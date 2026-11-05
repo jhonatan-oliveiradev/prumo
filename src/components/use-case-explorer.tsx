@@ -1,8 +1,12 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {ArrowUpRight,Check,Plus,Sparkles,Target,Repeat2,Wallet} from 'lucide-react';
 const cases=[{title:'O seu dia a dia',subtitle:'O básico, bem cuidado.',description:'Dê contexto às movimentações e entenda quanto está disponível depois dos compromissos.',points:['Contas e categorias','Receitas e despesas','Separação pessoal e trabalho'],label:'PANORAMA DO MÊS',value:'R$ 4.280,00',Icon:Wallet,items:[['Receitas recebidas','R$ 5.400,00'],['Despesas pagas','R$ 1.120,00']]},{title:'O que vem todo mês',subtitle:'Previsibilidade para respirar.',description:'Cadastre salário, aluguel e assinaturas uma vez. Acompanhe as próximas ocorrências sem antecipar valores no saldo.',points:['Recorrências semanais, mensais ou anuais','Parcelas e vencimentos','Confirmação de pago ou recebido'],label:'PRÓXIMOS COMPROMISSOS',value:'Tudo no seu tempo.',Icon:Repeat2,items:[['Aluguel · dia 10','R$ 900,00'],['Internet · dia 15','R$ 99,90']]},{title:'O que você quer conquistar',subtitle:'Um destino para guardar.',description:'Defina limites por categoria e acompanhe metas que fazem sentido para o seu momento.',points:['Orçamentos por categoria','Metas com progresso','Planejamento dos próximos meses'],label:'SUA PRÓXIMA CONQUISTA',value:'Reserva de tranquilidade',Icon:Target,items:[['Guardado','R$ 1.800,00'],['Objetivo','R$ 6.000,00']]},{title:'Uma orientação quando precisar',subtitle:'Seu dinheiro, com mais clareza.',description:'Autorize o envio de indicadores gerais ao Gemini para receber sugestões práticas. Sem entregar descrições ou valores exatos.',points:['Consentimento em cada análise','Somente indicadores gerais','Suas decisões continuam suas'],label:'CONSELHEIRO PRUMO',value:'Um próximo passo possível.',Icon:Sparkles,items:[['Prioridade','Revisar compromissos'],['Próxima ação','Conferir recebimentos']]}];
+const landscapes=[{src:'/images/prumo-canyon.webp',position:'50% 50%'},{src:'/images/prumo-ridge.webp',position:'54% 50%'},{src:'/images/prumo-lake.webp',position:'50% 50%'},{src:'/images/prumo-river.webp',position:'50% 50%'}];
 export function UseCaseExplorer() {
+ const [loaded,setLoaded]=useState<boolean[]>([false,false,false,false]);
+ const photos=useRef<(HTMLImageElement|null)[]>([]);
+ useEffect(()=>{setLoaded(previous=>previous.map((ready,index)=>ready||Boolean(photos.current[index]?.complete&&photos.current[index]?.naturalWidth)));},[]);
  const [active,setActive]=useState(0),[mode,setMode]=useState<'overview'|'detail'>('overview');
  return <section className="use-case-section" id="recursos">
   <div className="use-case-copy"><p className="eyebrow">FEITO PARA A VIDA REAL</p><h2>Um espaço que acompanha<br/>o seu momento.</h2>
@@ -12,7 +16,7 @@ export function UseCaseExplorer() {
    </div>)}</div>
   </div>
   <div className={`use-case-visual scene-${active}`}>
-   <img className="use-case-forest" src="/images/prumo-forest.webp" alt="" loading="lazy" decoding="async" width="2048" height="1143"/>
+   <div className="use-case-landscapes" data-ready={loaded[active]} aria-hidden="true">{landscapes.map((photo,index)=><img ref={node=>{photos.current[index]=node;}} className="use-case-forest" data-active={active===index&&loaded[index]} key={photo.src} src={photo.src} alt="" loading="lazy" decoding="async" width="1920" height="1072" style={{objectPosition:photo.position}} onLoad={()=>setLoaded(previous=>previous.map((ready,i)=>i===index||ready))}/>)}</div>
    <div className="demo-stage">{cases.flatMap((item,index)=>(['overview','detail'] as const).map(view=>{
     const selected=active===index&&mode===view,Icon=item.Icon;
     return <div className="demo-scene" data-active={selected} aria-hidden={!selected} inert={!selected} key={`${index}-${view}`}>
