@@ -23,7 +23,7 @@ export function FinancialAdvisor({data,month,today,space,synchronized,onNavigate
  async function ask(){
   const controller=new AbortController();request.current=controller;setBusy(true);setError('');setAnswer('');setShown(0);setExpanded(false);
   try{const response=await fetch('/api/v1/advisor',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({task,month,space,contextSignature:signature,consent:checked})});const result=await response.json();if(!response.ok)throw Error(result.error||'Não foi possível analisar.');if(controller.signal.aborted)return;setAnswer(result.text+(result.incomplete?'\n\nA resposta atingiu o limite de tamanho.':''));setRemaining(result.remaining);}
-  catch(e){if(!controller.signal.aborted)setError((e as Error).message);}
+  catch(e){if(!controller.signal.aborted){setError((e as Error).message);setExpanded(true);}}
   finally{if(request.current===controller){setBusy(false);setChecked(false);}}
  }
  const state=busy?'thinking':revealing?'speaking':'idle';
