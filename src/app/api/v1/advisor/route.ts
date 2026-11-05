@@ -32,7 +32,7 @@ export async function POST(request:Request){
   const day=today,key=`advisor:${session.user.id}:${day}`;
   const quota=await prisma.$queryRaw<{count:number}[]>`INSERT INTO "auth_rate_limit" ("id","key","count","lastRequest") VALUES (${randomUUID()},${key},1,${BigInt(Date.now())}) ON CONFLICT ("key") DO UPDATE SET "count"="auth_rate_limit"."count"+1,"lastRequest"=${BigInt(Date.now())} WHERE "auth_rate_limit"."count"<10 RETURNING "count"`;
   if(!quota.length)throw new AdvisorError('Seu limite de 10 análises por dia foi atingido.',429);
-  const result=await askGemini(indicators,input.task as AdvisorTask,process.env.GEMINI_API_KEY,process.env.GEMINI_MODEL||'gemini-2.5-flash');
+  const result=await askGemini(indicators,input.task as AdvisorTask,process.env.GEMINI_API_KEY,process.env.GEMINI_MODEL||'gemini-3.5-flash-lite');
   return Response.json({...result,revision:workspace.revision,remaining:10-quota[0].count,indicators},{headers});
  }catch(e){if(e instanceof AdvisorError)return Response.json({error:e.message},{status:e.status,headers});if(e instanceof Error&&(e.name==='TimeoutError'||e.name==='AbortError'))return Response.json({error:'O Gemini demorou para responder. Tente novamente.'},{status:504,headers});return Response.json({error:'Não foi possível preparar a análise. Seus dados não foram alterados.'},{status:503,headers});}
 }
