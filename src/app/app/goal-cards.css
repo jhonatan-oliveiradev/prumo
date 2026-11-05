@@ -1,0 +1,34 @@
+.goal-gallery { margin-block: 28px; }
+.goal-gallery > .section-title { margin-bottom: 16px; }
+.goal-gallery > p { margin-bottom: 16px; }
+.goal-gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.goal-visual-card.card { padding: 0; overflow: hidden; min-width: 0; }
+.goal-cover-art {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2.65;
+  overflow: hidden;
+  color: #d9eadc;
+  background: repeating-linear-gradient(133deg, transparent 0 15px, #92b39e19 16px 17px), linear-gradient(130deg,#173426,#314d3c);
+}
+.goal-cover-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.goal-card-content { display: grid; gap: 12px; padding: 18px; }
+.goal-card-heading, .goal-card-values, .goal-card-progress, .goal-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.goal-card-heading h3 { overflow-wrap: anywhere; }
+.goal-card-heading svg { flex: none; color: var(--muted); }
+.goal-card-values { flex-wrap: wrap; font-variant-numeric: tabular-nums; font-size: 13px; }
+.goal-card-values span, .goal-card-progress { font-size: 12px; color: var(--muted); }
+.goal-card-actions { padding-top: 8px; border-top: 1px solid var(--border); min-height: 42px; }
+.goal-cover-picker { min-width: 0; padding: 0; border: 0; }
+.goal-cover-picker legend { margin-bottom: 10px; font-size: 12px; }
+.goal-cover-options { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.goal-cover-options label { position: relative; overflow: hidden; padding: 3px; border: 1px solid var(--border); border-radius: 7px; gap: 4px; cursor: pointer; }
+.goal-cover-options input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; padding: 0; }
+.goal-cover-options label:has(input:checked) { border-color: var(--positive); box-shadow: inset 0 0 0 1px var(--positive); }
+.goal-cover-options label:has(input:focus-visible) { outline: 2px solid var(--positive); outline-offset: 2px; }
+.goal-cover-options .goal-cover-art { aspect-ratio: 2; border-radius: 4px; }
+.goal-cover-options label > span { font-size: 11px; padding: 2px 3px; }
+.goal-featured-option { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+.goal-featured-option input { width: 17px; height: 17px; min-height: 0; padding: 0; accent-color: var(--positive); }
+@media (max-width: 1120px) { .goal-gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 620px) { .goal-gallery-grid { grid-template-columns: minmax(0,1fr); } }

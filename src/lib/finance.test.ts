@@ -23,3 +23,12 @@ test('compromissos incluem mês selecionado e vencidos, sem pagos ou outros mese
  const d:FinanceData={...emptyData,transactions:[{...entry,id:'futuro',date:'2026-12-01'},{...entry,id:'mes',date:'2026-11-20'},{...entry,id:'vencido',date:'2026-10-20'},{...entry,id:'pago',date:'2026-11-01',status:'paid'}]};
  assert.deepEqual(commitments(d,'2026-11','2026-11-04').map(t=>t.id),['vencido','mes']);
 });
+
+test('metas de backups antigos continuam válidas e capas são limitadas ao catálogo', () => {
+ const legacy={id:'reserva',name:'Reserva',target:50000,saved:10000};
+ assert.ok(isFinanceData({...emptyData,goals:[legacy]}));
+ assert.ok(isFinanceData({...emptyData,goals:[{...legacy,cover:'forest',featured:true}]}));
+ assert.equal(isFinanceData({...emptyData,goals:[{...legacy,cover:'https://example.com/cover'}]}),false);
+ assert.equal(isFinanceData({...emptyData,goals:[{...legacy,featured:'true'}]}),false);
+ assert.equal(isFinanceData({...emptyData,goals:Array.from({length:4},(_,i)=>({...legacy,id:String(i),featured:true}))}),false);
+});

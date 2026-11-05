@@ -294,6 +294,8 @@ model Goal {
   currency          String     @default("BRL") @db.VarChar(3)
   status            GoalStatus @default(ACTIVE)
   targetOn          DateTime?  @db.Date
+  cover             String?
+  featured          Boolean    @default(false)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 

@@ -1,7 +1,7 @@
 import type {CSSProperties} from 'react';
 import Link from 'next/link';
 import {MotionLabel} from './motion-label';
-import {ArrowUpRight, WifiOff} from 'lucide-react';
+import {ArrowUpRight} from 'lucide-react';
 
 const width = 1440;
 const height = 460;
@@ -101,8 +101,8 @@ export function LandingFooter() {
               <MotionLabel>prumo.</MotionLabel>
             </Link>
             <p className="prumo-footer-tagline">O seu dinheiro, no eixo.</p>
-            <p className="prumo-footer-note">Ferramenta de organização financeira.<br />Não realiza pagamentos ou movimentações bancárias.</p>
-            <Link href="/app" className="prumo-footer-cta"><MotionLabel>Abrir meu espaço</MotionLabel> <ArrowUpRight size={16} aria-hidden="true" /></Link>
+            <p className="prumo-footer-note">Controle de finanças pessoais.<br />O Prumo não realiza pagamentos.</p>
+            <Link href="/app" className="prumo-footer-cta"><MotionLabel>Abrir o Prumo</MotionLabel> <ArrowUpRight size={16} aria-hidden="true" /></Link>
           </div>
           <nav className="prumo-footer-nav" aria-label="Navegação de rodapé">
             <div>
@@ -113,14 +113,13 @@ export function LandingFooter() {
             </div>
             <div>
               <p>Seu Prumo</p>
-              <a href="#instalar"><MotionLabel>Instalar PWA</MotionLabel></a>
+              <a href="#instalar"><MotionLabel>Instalar o Prumo</MotionLabel></a>
               <a href="#conteudo"><MotionLabel>Voltar ao início</MotionLabel> <ArrowUpRight size={13} aria-hidden="true" /></a>
             </div>
           </nav>
         </div>
         <div className="prumo-footer-bottom">
-          <span>© Prumo · Um passo de cada vez.</span>
-          <span><WifiOff size={14} aria-hidden="true" /> Com uma cópia local após abrir com internet.</span>
+          <span>© Prumo</span>
           <span className="prumo-footer-credit">powered by <a href="https://enex.studio" target="_blank" rel="noopener noreferrer"><MotionLabel>NX Studio.</MotionLabel><ArrowUpRight size={13} aria-hidden="true" /></a></span>
         </div>
       </div>

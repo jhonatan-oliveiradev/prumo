@@ -1,0 +1,3 @@
+ALTER TABLE "Goal"
+    ADD COLUMN "cover" TEXT,
+    ADD COLUMN "featured" BOOLEAN NOT NULL DEFAULT false;
