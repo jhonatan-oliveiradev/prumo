@@ -7,6 +7,7 @@ export function UseCaseExplorer() {
  const [loaded,setLoaded]=useState<boolean[]>([false,false,false,false]);
  const photos=useRef<(HTMLImageElement|null)[]>([]);
  useEffect(()=>{setLoaded(previous=>previous.map((ready,index)=>ready||Boolean(photos.current[index]?.complete&&photos.current[index]?.naturalWidth)));},[]);
+ const [background,setBackground]=useState<'image'|'mesh'>('image');
  const [active,setActive]=useState(0),[mode,setMode]=useState<'overview'|'detail'>('overview');
  return <section className="use-case-section" id="recursos">
   <div className="use-case-copy"><p className="eyebrow">FEITO PARA A VIDA REAL</p><h2>Um espaço que acompanha<br/>o seu momento.</h2>
@@ -15,13 +16,14 @@ export function UseCaseExplorer() {
     <div className="case-panel-wrap" inert={active!==index} aria-hidden={active!==index}><div className="case-panel-clip"><div id={`case-panel-${index}`} role="region" aria-labelledby={`case-trigger-${index}`}><p>{item.description}</p><ul>{item.points.map(point=><li key={point}><Check size={15}/>{point}</li>)}</ul><a href="/app" className="ref-text-link">Começar por aqui <ArrowUpRight size={15}/></a></div></div></div>
    </div>)}</div>
   </div>
-  <div className={`use-case-visual scene-${active}`}>
+  <div className={`use-case-visual scene-${active}`} data-background={background}>
    <div className="use-case-landscapes" data-ready={loaded[active]} aria-hidden="true">{landscapes.map((photo,index)=><img ref={node=>{photos.current[index]=node;}} className="use-case-forest" data-active={active===index&&loaded[index]} key={photo.src} src={photo.src} alt="" loading="lazy" decoding="async" width="1920" height="1072" style={{objectPosition:photo.position}} onLoad={()=>setLoaded(previous=>previous.map((ready,i)=>i===index||ready))}/>)}</div>
+   <div className="use-case-mesh" aria-hidden="true"><span/><span/></div>
    <div className="demo-stage">{cases.flatMap((item,index)=>(['overview','detail'] as const).map(view=>{
     const selected=active===index&&mode===view,Icon=item.Icon;
     return <div className="demo-scene" data-active={selected} aria-hidden={!selected} inert={!selected} key={`${index}-${view}`}>
      <div className="use-case-demo">
-      <div className="demo-window-bar"><div><img src="/logo.svg" alt="" width="22" height="22"/><span>prumo.</span></div><span className="demo-tag">EXEMPLO ILUSTRATIVO</span></div>
+      <div className="demo-window-bar"><div><img src="/logo.svg" alt="" width="22" height="22"/><span>prumo.</span></div><button className="demo-detail-toggle" aria-pressed={mode==='detail'} onClick={()=>setMode(mode==='overview'?'detail':'overview')}>{mode==='overview'?'Ver detalhes':'Ver panorama'}<Plus size={12}/></button></div>
       <div className="use-case-demo-title"><Icon size={18}/><span>{item.label}</span><span className="demo-state">{index===3?'Você autoriza':'Seu espaço'}</span></div>
       <strong>{view==='overview'?item.value:item.subtitle}</strong>
       {index===0&&view==='overview'&&<div className="demo-cash-flow" aria-label="Exemplo de movimentos ao longo do mês"><div>{[36,53,43,69,56,81,73,94,67,83,72,89].map((height,i)=><span key={i} style={{height:height+'%'}}/>)}</div><span>INÍCIO DO MÊS</span><span>HOJE</span></div>}
@@ -32,7 +34,7 @@ export function UseCaseExplorer() {
      <div className="demo-context"><div><Icon size={16}/><span>{view==='overview'?'UM POUCO MAIS DE DIREÇÃO':'NO SEU RITMO'}</span><Check size={14}/></div><strong>{view==='overview'?item.subtitle:item.title}</strong><p>{index===3?'Indicadores gerais. Sem nomes, descrições ou valores exatos.':item.points.join(' · ')}</p></div>
     </div>;
    }))}</div>
-   <div className="visual-mode" role="group" aria-label="Visualização do exemplo"><button aria-pressed={mode==='overview'} onClick={()=>setMode('overview')}>Panorama</button><button aria-pressed={mode==='detail'} onClick={()=>setMode('detail')}>Detalhes</button></div><p className="visual-disclaimer">Dados fictícios. Nenhuma operação ou consulta à IA é realizada.</p>
+   <div className="visual-mode" role="group" aria-label="Fundo do exemplo"><button aria-pressed={background==='image'} onClick={()=>setBackground('image')}>Imagem</button><button aria-pressed={background==='mesh'} onClick={()=>setBackground('mesh')}>Malha</button></div><p className="visual-disclaimer">Dados fictícios. Nenhuma operação ou consulta à IA é realizada.</p>
   </div>
  </section>;
 }
