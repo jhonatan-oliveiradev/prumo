@@ -1,4 +1,5 @@
 'use client';
+import {useConfirm} from '@/components/confirmation-provider';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {emptyData,isFinanceData,type FinanceData} from '@/lib/finance';
 import {hydrateWorkspace,cloudStateForRevision} from '@/lib/cloud-state';
@@ -8,6 +9,7 @@ type Cache={data:FinanceData;revision:number;dirty:boolean};
 export type SyncState='local'|'loading'|'connected'|'ready'|'saving'|'offline'|'conflict'|'error';
 const GUEST_KEY='prumo:data:v1';
 export function useFinanceStore(){
+ const confirm=useConfirm();
  const [data,setData]=useState<FinanceData>(emptyData),[ready,setReady]=useState(false),[user,setUser]=useState<CloudUser|null>(null),[enabled,setEnabled]=useState(false),[state,setState]=useState<SyncState>('loading'),[message,setMessage]=useState(''),[localAvailable,setLocalAvailable]=useState(false),[storageError,setStorageError]=useState(false);
  const owner=useRef<CloudUser|null>(null),current=useRef<Cache>({data:emptyData,revision:0,dirty:false}),busy=useRef(false),mounted=useRef(true),conflict=useRef(false),undo=useRef<FinanceData|null>(null);
  const cacheKey=()=>owner.current?`prumo:cloud:v1:${owner.current.id}`:GUEST_KEY;
@@ -84,13 +86,13 @@ export function useFinanceStore(){
  async function useRemote(){
   if(!owner.current||busy.current)return;
   try{const response=await fetch('/api/v1/workspace',{cache:'no-store'});if(!response.ok)throw Error();const {workspace}=await response.json() as {workspace:WorkspaceSnapshot|null};
-   if(!confirm('Usar os dados da nuvem? Exporte um backup primeiro se quiser preservar as alterações locais não sincronizadas.'))return;
+   if(!await confirm('Usar os dados da nuvem? Exporte um backup primeiro se quiser preservar as alterações locais não sincronizadas.',{title:'Usar a versão da nuvem?',action:'Usar versão da nuvem',destructive:true}))return;
    const cache=hydrateWorkspace(workspace,owner.current.name);writeCache(cache);current.current=cache;undo.current=null;conflict.current=false;setData(cache.data);setState(cloudStateForRevision(cache.revision));setMessage('Dados da nuvem carregados.');
   }catch{setMessage('Não foi possível carregar a nuvem. Nenhum dado foi substituído.');}
  }
- function importLocal(){
+ async function importLocal(){
   if(!owner.current||!['ready','connected'].includes(state))return;
-  if(!confirm('Copiar os dados do modo local para sua conta? Isso substituirá o conteúdo atual da conta após sincronizar. O backup local original será mantido.'))return;
+  if(!await confirm('Copiar os dados do modo local para sua conta? Isso substituirá o conteúdo atual da conta após sincronizar. O backup local original será mantido.',{title:'Importar dados locais?',action:'Importar para minha conta',destructive:true}))return;
   try{const d=JSON.parse(localStorage.getItem(GUEST_KEY)||'null');if(!isFinanceData(d))throw Error();change(d);}catch{setMessage('Os dados locais não puderam ser importados.');}
  }
  return {data,ready,user,enabled,state,storageError,restore:(next:FinanceData)=>change(next,true),message,change,undoChange,canUndo:Boolean(undo.current),setMessage,refresh,useRemote,importLocal,localAvailable};
