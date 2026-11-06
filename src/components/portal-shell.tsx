@@ -14,7 +14,10 @@ export function PortalShell({children, label, fullHeight = false}: {children: Re
     <div className="portal-layout">
       <section className="portal-content">{children}</section>
       <div className="portal-art" aria-hidden="true">
-        {fullHeight && <div className="portal-art-reveal"><AuthVideoASCII /></div>}
+        {fullHeight && <>
+          <div className="portal-art-reveal"><AuthVideoASCII /></div>
+          <span className="portal-sweep-beam" />
+        </>}
         <span className="portal-art-kicker">SEU DINHEIRO, NO EIXO.</span>
         <div className="portal-art-cross" />
         <span className="portal-art-code">{label}</span>
