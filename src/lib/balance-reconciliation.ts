@@ -1,6 +1,5 @@
 import type {FinanceData} from './finance';
 import {accountBalance} from './account-transfers';
-import {toCents} from './finance';
 
 /** An immutable correction of account balance, with values captured at the moment of reconciliation. */
 export type BalanceReconciliation={
@@ -16,13 +15,16 @@ export type BalanceReconciliation={
 const positive=/^0+(?:[.,]0{1,2})?$/;
 export function parseAccountBalance(value:string):number{
  const trimmed=value.trim().replace(/^R\$\s*/,'').trim();
- if(positive.test(trimmed))return 0;
- if(trimmed.startsWith('-')){
-  const absolute=trimmed.slice(1).trim();
-  if(positive.test(absolute))return 0;
-  return -toCents(absolute);
- }
- return toCents(trimmed);
+ const negative=trimmed.startsWith('-');
+ const absolute=negative?trimmed.slice(1).trim():trimmed;
+ if(positive.test(absolute))return 0;
+ const grouped=/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(absolute);
+ const plain=/^\d+(?:[.,]\d{1,2})?$/.test(absolute);
+ if(!grouped&&!plain)throw Error('Informe um saldo válido, como 1.234,56 ou -50,00.');
+ const decimal=grouped?absolute.replace(/\./g,'').replace(',','.'):absolute.replace(',','.');
+ const cents=Math.round(Number(decimal)*100);
+ if(!Number.isSafeInteger(cents)||cents<=0)throw Error('Informe um saldo dentro do limite permitido.');
+ return negative?-cents:cents;
 }
 
 function dateOk(value:unknown):value is string{
