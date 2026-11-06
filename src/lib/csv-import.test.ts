@@ -49,3 +49,18 @@ test('usa o fechamento selecionado e protege fatura paga contra importação e r
   const newRows = parseCsv('Data;Descrição;Valor\n06/11/2026;Nova compra;27,31').rows;
   assert.equal((await previewCsv(newRows, paid, card))[0].blocked, true);
 });
+
+test('reconhece cabeçalhos bancários comuns sem mudar o significado de sinal e centavos',()=>{
+ const variants=[
+  'Data Lançamento;Histórico do Lançamento;Valor da Movimentação\n06/11/2026;Mercado;-1.234,56',
+  'Transaction Date,Merchant,Amount (BRL)\n2026-11-06,Farmácia,-29.90',
+  'Data da transação;Descrição da transação;Valor em reais\n06/11/2026;Cinema;-45,00',
+ ];
+ const expected=[-123456,-2990,-4500];
+ variants.forEach((csv,index)=>{
+  const result=parseCsv(csv);
+  assert.deepEqual(result.invalidLines,[]);
+  assert.equal(result.rows.length,1);
+  assert.equal(result.rows[0].amount,expected[index]);
+ });
+});

@@ -60,9 +60,9 @@ export function parseCsv(text: string): {rows: CsvRow[]; invalidLines: number[]}
   if (new TextEncoder().encode(text).byteLength > maxCsvBytes) throw Error('Escolha um CSV de até 256 KB.');
   const clean = text.replace(/^\uFEFF/, '');
   const aliases = [
-    ['data','date','data da compra','data de lancamento'],
-    ['descricao','description','titulo','title','historico'],
-    ['valor','amount','valor (r$)','valor r$'],
+    ['data','date','data da compra','data de lancamento','data lancamento','data da transacao','data da movimentacao','data do movimento','transaction date','data efetiva'],
+    ['descricao','description','titulo','title','historico','descricao do lancamento','descricao da transacao','historico do lancamento','estabelecimento','nome do estabelecimento','detalhes','memo','merchant'],
+    ['valor','amount','valor (r$)','valor r$','valor da transacao','valor da movimentacao','valor em reais','valor total','montante','amount (brl)'],
   ];
   let parsed: ReturnType<typeof records> | undefined;
   let columns: number[] = [];
@@ -75,7 +75,7 @@ export function parseCsv(text: string): {rows: CsvRow[]; invalidLines: number[]}
       break;
     }
   }
-  if (!parsed) throw Error('O CSV precisa começar com as colunas Data, Descrição e Valor.');
+  if (!parsed) throw Error('Não reconhecemos as colunas do CSV. O arquivo precisa identificar data, descrição e valor; confira os nomes no cabeçalho.');
   if (parsed.length - 1 > maxCsvRows) throw Error('Divida o CSV em arquivos de até 500 lançamentos.');
   const rows: CsvRow[] = [], invalidLines: number[] = [];
   for (const {cells, line} of parsed.slice(1)) {
