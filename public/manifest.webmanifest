@@ -1,1 +1,30 @@
-{"id": "/", "name": "Prumo — O seu dinheiro, no eixo.", "short_name": "Prumo", "lang": "pt-BR", "start_url": "/app", "scope": "/", "display": "standalone", "background_color": "#030504", "theme_color": "#030504", "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}
+{
+  "id": "/",
+  "name": "Prumo — O seu dinheiro, no eixo.",
+  "short_name": "Prumo",
+  "lang": "pt-BR",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#030504",
+  "theme_color": "#030504",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "description": "Organize contas, cartões, despesas, vencimentos e metas em um só lugar. Acompanhe seu dinheiro pelo navegador ou instale o Prumo no dispositivo.",
+  "dir": "ltr",
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "prefer_related_applications": false
+}
