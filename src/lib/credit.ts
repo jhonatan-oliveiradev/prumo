@@ -1,3 +1,4 @@
+import type {CsvOrigin} from './import-origin';
 import type {FinanceData, Transaction} from './finance';
 
 export const cardColors = {
@@ -18,6 +19,8 @@ export type CreditCard = {
   space: 'personal' | 'work';
 };
 export type CreditPurchase = {
+  imported?: CsvOrigin;
+  statementCycle?: string;
   id: string;
   cardId: string;
   description: string;
@@ -66,7 +69,7 @@ export function creditInvoices(data: FinanceData): CreditInvoice[] {
   for (const purchase of data.creditPurchases ?? []) {
     const card = cards.get(purchase.cardId);
     if (!card) continue;
-    const firstCycle = purchaseCycle(card, purchase.date);
+    const firstCycle = purchase.statementCycle ?? purchaseCycle(card, purchase.date);
     const base = Math.floor(purchase.amount / purchase.installments);
     const remainder = purchase.amount % purchase.installments;
     for (let index = 0; index < purchase.installments; index++) {
@@ -143,7 +146,8 @@ export function validCreditLedger(data: FinanceData, categories: string[], valid
       !purchases.every(p => p && id(p.id) && cardIds.has(p.cardId) && title(p.description, 100) &&
         categories.includes(p.category) && validDate(p.date) && p.date >= '2000-01-01' && p.date <= '2099-12-31' &&
         Number.isInteger(p.installments) && p.installments >= 1 && p.installments <= 60 &&
-        Number.isSafeInteger(p.amount) && p.amount >= p.installments) ||
+        Number.isSafeInteger(p.amount) && p.amount >= p.installments &&
+        (p.statementCycle === undefined ? p.imported === undefined : (typeof p.statementCycle === 'string' && p.imported && p.installments === 1 && /^20\d{2}-(0[1-9]|1[0-2])$/.test(p.statementCycle)))) ||
       new Set(purchases.map(p => p.id)).size !== purchases.length ||
       !Number.isSafeInteger(purchases.reduce((total, purchase) => total + purchase.amount, 0))) return false;
   const invoices = new Map(creditInvoices(data).map(invoice => [invoiceKey(invoice), invoice]));

@@ -213,11 +213,16 @@ model CreditPurchase {
   amountMinor  BigInt
   purchasedOn  DateTime @db.Date
   category     String
-  installments Int
+  installments     Int
+  importBatchId    String?
+  importExternalId String?
+  statementCycle   String?
 
+  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
   card CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([cardId, clientId])
+  @@unique([cardId, importExternalId])
 }
 
 model Transaction {
@@ -407,6 +412,7 @@ model ImportBatch {
 
   workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  purchases    CreditPurchase[]
 
   @@index([workspaceId, createdAt])
 }

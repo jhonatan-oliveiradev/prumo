@@ -1,3 +1,17 @@
 'use client';
-import {Compass,RefreshCw} from 'lucide-react';
-export function RecoveryScreen({notFound=false,retry}:{notFound?:boolean;retry?:()=>void}){return <main className="recovery-screen"><a href="/" className="recovery-brand"><img src="/logo.svg" alt="Prumo início" width="44" height="44"/></a><Compass size={44} strokeWidth={1.2}/><p className="eyebrow">{notFound?'404 · FORA DO CAMINHO':'VAMOS RETOMAR'}</p><h1>{notFound?'Vamos voltar ao seu eixo.':'Algo interrompeu esta tela.'}</h1><p>{notFound?'Este endereço não existe ou mudou. Seu espaço continua a um toque daqui.':'Tente carregar novamente. Este aviso não solicita a exclusão nem a substituição dos seus registros.'}</p><div>{retry&&<button className="primary" onClick={retry}><RefreshCw size={16}/>Tentar novamente</button>}<a className="secondary" href="/app">Abrir meu espaço</a><a className="text-button" href="/">Conhecer o Prumo</a></div></main>}
+
+import {RefreshCw} from 'lucide-react';
+import {PortalShell} from './portal-shell';
+
+export function RecoveryScreen({notFound = false, retry}: {notFound?: boolean; retry?: () => void}) {
+  return <PortalShell label={notFound ? '404' : ' / !'}>
+    <p className="portal-eyebrow">{notFound ? 'Erro 404' : 'Falha de carregamento'}</p>
+    <h1>{notFound ? 'Página não encontrada' : 'Não foi possível carregar'}</h1>
+    <p>{notFound ? 'Confira o endereço ou volte para o Prumo.' : 'Tente novamente. Se o erro continuar, volte à página inicial.'}</p>
+    <div className="portal-actions">
+      {retry && <button className="portal-action" onClick={retry}><RefreshCw size={15} />Tentar novamente</button>}
+      <a className={notFound ? 'portal-action' : undefined} href="/app">Abrir aplicativo</a>
+      <a href="/">Página inicial</a>
+    </div>
+  </PortalShell>;
+}
