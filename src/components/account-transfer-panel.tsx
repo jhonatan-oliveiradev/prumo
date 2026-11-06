@@ -96,7 +96,7 @@ export function AccountTransferPanel({data,format,onChange,today}:{
     <Dialog.Close className="close icon-button" aria-label="Fechar"><X size={20}/></Dialog.Close>
     <form onSubmit={submit} className="transfer-form">
      <label>Conta de origem
-      <AppSelect name="sourceAccountId" value={source} onChange={e=>setSource(e.target.value)} required>
+      <AppSelect name="sourceAccountId" value={source} onChange={e=>{setSource(e.target.value);if(destination===e.target.value)setDestination(data.accounts.find(a=>a.id!==e.target.value)?.id??'');}} required>
        {data.accounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}
       </AppSelect>
      </label>
