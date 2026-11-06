@@ -1,4 +1,4 @@
-import {SITE_DESCRIPTION, SITE_NAME, SITE_URL} from '@/lib/seo';
+import {SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_IMAGE_PATH} from '@/lib/seo';
 
 /**
  * Search engines can understand the public product, not the private workspace.
@@ -24,7 +24,7 @@ const structuredData = {
       applicationCategory: 'FinanceApplication',
       operatingSystem: 'Any',
       description: SITE_DESCRIPTION,
-      image: `${SITE_URL}/opengraph-image`,
+      image: `${SITE_URL}${SOCIAL_IMAGE_PATH}`,
       featureList: [
         'Contas e lançamentos financeiros',
         'Cartões e faturas',
