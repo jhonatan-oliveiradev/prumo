@@ -157,7 +157,7 @@ export function AuthVideoASCII() {
 
   return <div className="portal-video-stage" ref={rootRef}>
     <video ref={videoRef} className="portal-video" autoPlay muted loop playsInline
-      preload="metadata" poster="/images/prumo-forest.webp" aria-hidden="true" tabIndex={-1}>
+      preload="metadata" poster="/videos/prumo-login-poster.webp" aria-hidden="true" tabIndex={-1}>
       <source src="/videos/prumo-login.mp4" type="video/mp4" />
       <source src="/videos/prumo-login.webm" type="video/webm" />
     </video>
