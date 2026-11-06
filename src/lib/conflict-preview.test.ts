@@ -13,8 +13,8 @@ test('conflict previews count every collection without changing either version',
   const cloud:FinanceData={...emptyData,creditCards:[{id:'c',name:'Cartão',limit:100000,color:'forest',closingDay:10,dueDay:18,space:'personal'}]};
   const beforeDevice=JSON.stringify(device),beforeCloud=JSON.stringify(cloud);
   assert.deepEqual(describeWorkspaceConflict(device,cloud,17),{
-    device:{accounts:1,transactions:1,goals:1,cards:0,recurrences:0,transfers:0},
-    cloud:{accounts:0,transactions:0,goals:0,cards:1,recurrences:0,transfers:0},
+    device:{accounts:1,transactions:1,goals:1,cards:0,recurrences:0,transfers:0,reconciliations:0},
+    cloud:{accounts:0,transactions:0,goals:0,cards:1,recurrences:0,transfers:0,reconciliations:0},
     cloudRevision:17,
   });
   assert.equal(JSON.stringify(device),beforeDevice);
@@ -22,5 +22,5 @@ test('conflict previews count every collection without changing either version',
 });
 
 test('empty workspaces produce safe zero-count previews',()=>{
-  assert.deepEqual(countWorkspaceEntries(emptyData),{accounts:0,transactions:0,goals:0,cards:0,recurrences:0,transfers:0});
+  assert.deepEqual(countWorkspaceEntries(emptyData),{accounts:0,transactions:0,goals:0,cards:0,recurrences:0,transfers:0,reconciliations:0});
 });
