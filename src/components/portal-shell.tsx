@@ -4,7 +4,7 @@ import '@/app/portal-cinematic.css';
 import {AuthBackdrop} from './auth-backdrop';
 import {AuthVideoASCII} from './auth-video-ascii';
 
-export function PortalShell({children, label, fullHeight = false}: {children: ReactNode; label: string; fullHeight?: boolean}) {
+export function PortalShell({children, label, fullHeight = false}: {children: ReactNode; label?: string; fullHeight?: boolean}) {
   return <main className={fullHeight ? "prumo-portal prumo-portal--auth prumo-portal--cinematic" : "prumo-portal"}>
     {fullHeight && <AuthBackdrop />}
     <header className="portal-header">
@@ -19,8 +19,10 @@ export function PortalShell({children, label, fullHeight = false}: {children: Re
           <span className="portal-sweep-beam" />
         </>}
         <span className="portal-art-kicker">SEU DINHEIRO, NO EIXO.</span>
-        <div className="portal-art-cross" />
-        <span className="portal-art-code">{label}</span>
+        {!fullHeight && <>
+          <div className="portal-art-cross" />
+          <span className="portal-art-code">{label}</span>
+        </>}
         <span className="portal-art-caption">PRUMO / CONTROLE FINANCEIRO</span>
       </div>
     </div>

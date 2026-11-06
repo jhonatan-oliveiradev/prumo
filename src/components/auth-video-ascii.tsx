@@ -27,6 +27,11 @@ export function AuthVideoASCII() {
     const sampler = sample.getContext('2d', {willReadFrequently: true});
     if (!stage || !video || !canvas || !context || !sampler) return;
 
+    // The video is a decoder for the ASCII canvas, never an interactive player.
+    // Some browsers overlay PiP controls on visible video even without controls.
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
+
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const coarse = matchMedia('(pointer: coarse)');
     const poster = new Image();
@@ -231,6 +236,7 @@ export function AuthVideoASCII() {
 
   return <div className="portal-video-stage" ref={stageRef}>
     <video ref={videoRef} className="portal-video" autoPlay muted loop playsInline
+      disablePictureInPicture disableRemotePlayback
       preload="metadata" poster={POSTER} aria-hidden="true" tabIndex={-1}>
       <source src="/videos/prumo-login.webm" type="video/webm" />
       <source src="/videos/prumo-login.mp4" type="video/mp4" />

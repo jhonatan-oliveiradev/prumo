@@ -65,9 +65,8 @@ export function AuthScreen({signup, enabled}: {signup: boolean; enabled: boolean
     }
   }
 
-  return <PortalShell label={signup ? '/ 02' : '/ 01'} fullHeight>
+  return <PortalShell fullHeight>
     <div className="portal-auth-heading">
-      <p className="portal-eyebrow">Sua conta <span aria-hidden="true">— {signup ? '02' : '01'}</span></p>
       <h1>{signup ? 'Crie sua conta' : 'Entre no Prumo'}</h1>
       <p className="portal-auth-description">
         {signup ? 'Tenha seus registros à mão, em qualquer dispositivo.' : 'Continue de onde parou, com seus registros sincronizados.'}
@@ -108,7 +107,7 @@ export function AuthScreen({signup, enabled}: {signup: boolean; enabled: boolean
         </button>
       </form>
     </> : <p className="portal-unavailable" role="status">
-      O acesso à conta está indisponível no momento. Você ainda pode usar o Prumo sem entrar.
+      O acesso com conta não está configurado neste ambiente. Você ainda pode usar o Prumo sem entrar.
     </p>}
 
     <div className="portal-actions">
