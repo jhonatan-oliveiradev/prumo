@@ -67,3 +67,15 @@ export function reconcileAccount(data:FinanceData,entry:{
  if(!validReconciliations(next))throw Error('Revise a data, a justificativa e o valor informado.');
  return next;
 }
+
+/** Once accepted, an adjustment remains part of the ledger in all future snapshots. */
+export function preservesReconciliationHistory(before:FinanceData,after:FinanceData):boolean{
+ const entries=new Map((after.reconciliations??[]).map(item=>[item.id,item]));
+ return (before.reconciliations??[]).every(row=>{
+  const next=entries.get(row.id);
+  return Boolean(next)&&next!.accountId===row.accountId
+   &&next!.date===row.date&&next!.balanceBefore===row.balanceBefore
+   &&next!.balanceAfter===row.balanceAfter&&next!.delta===row.delta
+   &&next!.note===row.note;
+ });
+}
