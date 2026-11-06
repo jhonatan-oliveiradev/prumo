@@ -1,4 +1,3 @@
-import {Prisma} from '@prisma/client';
 import {categories,type FinanceData} from '@/lib/finance';
 import {isGoalCover} from '@/lib/goal-covers';
 import {isCardColor} from '@/lib/credit';
@@ -28,10 +27,12 @@ export async function readWorkspace(userId:string){
 
 export async function writeWorkspace(user:{id:string;name:string},data:FinanceData,revision:number){
  const id=workspaceId(user.id);
- try{return await prisma.$transaction(async tx=>{
+ return prisma.$transaction(async tx=>{
   const profile=await tx.appUser.upsert({where:{authSubject:user.id},create:{authSubject:user.id,displayName:user.name},update:{}});
   if(revision===0){
-   await tx.workspace.create({data:{id,name:'Meu espaço',displayName:data.name,revision:1,members:{create:{userId:profile.id,role:'OWNER'}}}});
+   const created=await tx.workspace.createMany({data:{id,name:'Meu espaço',displayName:data.name,revision:1},skipDuplicates:true});
+   if(created.count!==1)throw new RevisionConflict();
+   await tx.workspaceMember.create({data:{workspaceId:id,userId:profile.id,role:'OWNER'}});
   }else{
    const result=await tx.workspace.updateMany({where:{id,revision,members:{some:{user:{authSubject:user.id},role:{in:['OWNER','EDITOR']}}}},data:{revision:{increment:1},displayName:data.name}});
    if(result.count!==1)throw new RevisionConflict();
@@ -66,5 +67,5 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
   await tx.account.deleteMany({where:{workspaceId:id,id:{notIn:data.accounts.map(a=>entityId(id,'account',a.id))}}});
   await tx.auditLog.create({data:{workspaceId:id,actorId:profile.id,action:'workspace.sync',entityType:'Workspace',entityId:id,metadata:{revision:revision+1}}});
   return {revision:revision+1,updatedAt:new Date().toISOString()};
- },{maxWait:10000,timeout:60000});}catch(e){if(e instanceof Prisma.PrismaClientKnownRequestError&&e.code==='P2002')throw new RevisionConflict();throw e;}
+ },{maxWait:10000,timeout:60000});
 }
