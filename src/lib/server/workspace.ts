@@ -95,25 +95,31 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
    await tx.transfer.upsert({where:{id:tid},create:{id:tid,workspaceId:id,...fields},update:fields});
   }
 
-  // An older client must never remove reconciliation history it cannot represent.
+  // Never erase or mutate history, including when an older client sends a snapshot.
   if(data.reconciliations!==undefined){
    const prefix=entityId(id,'reconciliation','');
-   await tx.accountBalanceReconciliation.deleteMany({where:{workspaceId:id,id:{
-    startsWith:prefix,notIn:data.reconciliations.map(r=>entityId(id,'reconciliation',r.id)),
-   }}});
-  }
-  for(const item of data.reconciliations??[]){
-   const rid=entityId(id,'reconciliation',item.id);
-   const fields={
-    accountId:entityId(id,'account',item.accountId),
-    occurredOn:dateOnly(item.date),
-    deltaMinor:BigInt(item.delta),
-    balanceBeforeMinor:BigInt(item.balanceBefore),
-    balanceAfterMinor:BigInt(item.balanceAfter),
-    note:item.note,
-   };
-   // Preserve the historical correction: never rewrite a previously stored event.
-   await tx.accountBalanceReconciliation.createMany({data:[{id:rid,workspaceId:id,...fields}],skipDuplicates:true});
+   const stored=await tx.accountBalanceReconciliation.findMany({where:{workspaceId:id,id:{startsWith:prefix}}});
+   const incoming=new Map(data.reconciliations.map(item=>[entityId(id,'reconciliation',item.id),item]));
+   for(const previous of stored){
+    const next=incoming.get(previous.id);
+    if(!next
+     ||previous.accountId!==entityId(id,'account',next.accountId)
+     ||previous.occurredOn.toISOString().slice(0,10)!==next.date
+     ||previous.balanceBeforeMinor!==BigInt(next.balanceBefore)
+     ||previous.balanceAfterMinor!==BigInt(next.balanceAfter)
+     ||previous.deltaMinor!==BigInt(next.delta)
+     ||previous.note!==next.note)throw new RevisionConflict();
+   }
+   for(const item of data.reconciliations){
+    const rid=entityId(id,'reconciliation',item.id);
+    if(stored.some(previous=>previous.id===rid))continue;
+    await tx.accountBalanceReconciliation.create({data:{
+     id:rid,workspaceId:id,accountId:entityId(id,'account',item.accountId),
+     occurredOn:dateOnly(item.date),deltaMinor:BigInt(item.delta),
+     balanceBeforeMinor:BigInt(item.balanceBefore),balanceAfterMinor:BigInt(item.balanceAfter),
+     note:item.note,
+    }});
+   }
   }
   for(const r of data.recurringRules??[]){const rid=entityId(id,'recurring',r.id);const fields={title:r.description,amountMinor:BigInt(r.amount),kind:r.type==='income'?'INCOME' as const:'EXPENSE' as const,categoryId:categoryId(id,r.type==='income'?'INCOME':'EXPENSE',r.category),accountId:entityId(id,'account',r.accountId),space:r.space,interval:r.frequency==='weekly'?'WEEKLY' as const:r.frequency==='yearly'?'YEARLY' as const:'MONTHLY' as const,status:r.status==='active'?'ACTIVE' as const:'PAUSED' as const,startsOn:dateOnly(r.startsOn),endsOn:r.endsOn?dateOnly(r.endsOn):null,generatedThroughOn:r.generatedThrough?dateOnly(r.generatedThrough):null};await tx.recurringRule.upsert({where:{id:rid},create:{id:rid,workspaceId:id,clientId:r.id,...fields},update:fields});}
   const cardIds=(data.creditCards??[]).map(card=>entityId(id,'credit-card',card.id));
