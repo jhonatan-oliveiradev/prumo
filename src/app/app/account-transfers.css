@@ -1,0 +1,41 @@
+/* Shared account transfer ledger — visual vocabulary of the Prumo finance workspace. */
+.app .account-transfer-panel {margin-top:24px;}
+.app .account-transfer-panel .section-title {align-items:flex-start;}
+.app .account-transfer-panel .section-title > div {max-width:500px;}
+.app .account-transfer-panel .section-title p {font-size:12px;line-height:1.65;margin-top:6px;}
+.app .account-transfer-panel .section-title .secondary {flex:none;white-space:nowrap;}
+.app .account-transfer-history {display:flex;flex-direction:column;gap:0;margin-top:14px;}
+.app .transfer-history-row {
+ display:grid;grid-template-columns:40px minmax(0,1fr) auto 40px;
+ align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);
+}
+.app .transfer-history-row:last-child {border-bottom:0;}
+.app .transfer-history-icon {display:grid;place-items:center;width:40px;height:40px;background:var(--surface-secondary);border-radius:11px;color:var(--positive);}
+.app .transfer-history-details {min-width:0;display:flex;flex-direction:column;gap:5px;}
+.app .transfer-history-details strong {display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:13px;font-weight:550;}
+.app .transfer-history-details small {font-size:11px;overflow-wrap:anywhere;}
+.app .transfer-history-row b {font-size:13px;font-variant-numeric:tabular-nums;}
+.app .transfer-empty {display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:32px 15px;color:var(--muted);}
+.app .transfer-empty h3 {color:var(--ink);font-size:15px;}
+.app .transfer-empty p {max-width:480px;line-height:1.7;font-size:12px;}
+.transfer-dialog .transfer-form {display:flex;flex-direction:column;gap:15px;}
+.transfer-dialog .transfer-form label {display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:500;}
+.transfer-dialog .transfer-form input {
+ width:100%;min-height:46px;border:1px solid var(--border);
+ background:var(--surface-secondary);color:var(--ink);padding:11px 13px;border-radius:10px;
+}
+.transfer-dialog .transfer-form-grid {display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.transfer-dialog .transfer-balance-preview {display:flex;flex-direction:column;gap:7px;padding:14px;background:var(--surface-secondary);border:1px solid var(--border);border-radius:11px;font-size:12px;}
+.transfer-dialog .transfer-balance-preview strong {font-variant-numeric:tabular-nums;}
+.transfer-dialog .transfer-balance-preview small {color:var(--warning);font-size:11px;}
+.transfer-dialog .transfer-form .submit {margin-top:0;}
+@media(max-width:700px){
+ .app .account-transfer-panel .section-title {flex-direction:column;align-items:stretch;}
+ .app .account-transfer-panel .section-title .secondary {align-self:flex-start;}
+}
+@media(max-width:440px){
+ .app .transfer-history-row {grid-template-columns:34px minmax(0,1fr) auto;gap:9px;}
+ .app .transfer-history-row .delete {grid-column:3;justify-self:end;}
+ .app .transfer-history-row b {grid-column:2;}
+ .transfer-dialog .transfer-form-grid {grid-template-columns:1fr;}
+}
