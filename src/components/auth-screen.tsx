@@ -3,6 +3,7 @@
 import {useState, type FormEvent} from 'react';
 import {ArrowRight, ArrowUpRight, Eye, EyeOff} from 'lucide-react';
 import {authClient} from '@/lib/auth-client';
+import {authNetworkFailure,authSessionFailure,describeAuthFailure,type AuthFeedback} from '@/lib/auth-feedback';
 import {PortalShell} from './portal-shell';
 
 function GoogleMark() {
@@ -38,6 +39,7 @@ function SocialProviderButtons() {
 export function AuthScreen({signup, enabled}: {signup: boolean; enabled: boolean}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState<AuthFeedback | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -46,20 +48,26 @@ export function AuthScreen({signup, enabled}: {signup: boolean; enabled: boolean
     const form = new FormData(event.currentTarget);
     const input = {email: String(form.get('email')).trim(), password: String(form.get('password'))};
     const name = String(form.get('name') ?? '').trim();
-    if (signup && !name) { setError('Informe seu nome.'); return; }
+    if (signup && !name) { setFeedback(null); setError('Informe seu nome.'); return; }
     setError('');
+    setFeedback(null);
     setBusy(true);
     try {
       const result = signup ? await authClient.signUp.email({...input, name}) : await authClient.signIn.email(input);
       if (result.error) {
-        setError(result.error.status === 429 ? 'Muitas tentativas. Aguarde um momento e tente novamente.' :
-          signup ? 'Não foi possível criar a conta. Confira os campos ou tente entrar com esse e-mail.' :
-            'Não foi possível entrar. Confira o e-mail e a senha.');
+        setFeedback(describeAuthFailure(result.error, signup ? 'signup' : 'signin'));
+        return;
+      }
+      // A successful sign-in response is not sufficient if the browser did not
+      // retain the cookie; detect this before navigating to the workspace.
+      const session = await authClient.getSession();
+      if (session.error || !session.data?.session) {
+        setFeedback(authSessionFailure());
         return;
       }
       window.location.assign('/app');
     } catch {
-      setError('Não foi possível conectar. Confira sua conexão e tente novamente.');
+      setFeedback(authNetworkFailure());
     } finally {
       setBusy(false);
     }
@@ -101,6 +109,11 @@ export function AuthScreen({signup, enabled}: {signup: boolean; enabled: boolean
           {signup && <p className="portal-password-hint">Use pelo menos 12 caracteres.</p>}
         </div>
         {error && <p role="alert" className="portal-error">{error}</p>}
+        {feedback && <div role="alert" className="portal-auth-feedback">
+          <strong>{feedback.title}</strong>
+          <p>{feedback.description}</p>
+          <small>Referência: <code>{feedback.reference}</code></small>
+        </div>}
         <button type="submit" className="portal-action portal-submit" disabled={busy}>
           <span>{busy ? 'Conectando…' : signup ? 'Criar conta' : 'Entrar'}</span>
           {!busy && <ArrowRight size={17} aria-hidden="true" />}
