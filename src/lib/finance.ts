@@ -5,7 +5,7 @@ import {validReconciliations,type BalanceReconciliation} from './balance-reconci
 import {creditInvoices, validCreditLedger, type CreditCard, type CreditPurchase, type CreditInvoiceRef} from './credit';
 import {isGoalCover, maxFeaturedGoals, type GoalCover} from './goal-covers';
 
-export const categories = [...defaultCategories];
+export const categories:string[] = [...defaultCategories];
 export type Installment = {groupId:string;number:number;count:number};
 export type RecurringRule={id:string;description:string;amount:number;type:'income'|'expense';category:string;accountId:string;space:'personal'|'work';frequency:'weekly'|'monthly'|'yearly';status:'active'|'paused';startsOn:string;endsOn?:string;generatedThrough?:string};
 export type Transaction = {imported?:CsvOrigin;creditInvoice?:CreditInvoiceRef;recurrence?:{ruleId:string;scheduledOn:string};installment?:Installment;id:string;description:string;amount:number;type:'income'|'expense';category:string;date:string;accountId:string;status:'paid'|'pending';space:'personal'|'work'};
