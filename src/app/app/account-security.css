@@ -1,0 +1,78 @@
+/* Account security centre is intentionally limited to the finance workspace. */
+.app .account-security {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.app .security-header {display:flex; align-items:flex-start; gap:13px;}
+.app .security-symbol {flex:none; display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:var(--mint); color:var(--positive);}
+.app .security-header h3 {font-size:18px; letter-spacing:-.025em; line-height:1.35;}
+.app .security-header p {margin-top:5px; font-size:12px; color:var(--muted); line-height:1.6;}
+.app .security-section {
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:clamp(16px,2.5vw,23px);
+  background:var(--surface);
+}
+.app .security-section-heading {display:flex; align-items:center; gap:9px; color:var(--ink);}
+.app .security-section-heading h4 {font-size:14px; font-weight:600; margin:0; letter-spacing:-.015em;}
+.app .security-section-heading svg {color:var(--positive);}
+.app .security-section > .muted {font-size:12px; line-height:1.7; max-width:570px;}
+.app .security-form {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px;}
+.app .security-form label {display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--ink); font-size:12px; font-weight:550;}
+.app .security-form label:first-child {grid-column:1/-1;}
+.app .security-form input {
+  width:100%;
+  min-height:45px;
+  border:1px solid var(--border);
+  background:var(--surface-secondary);
+  color:var(--ink);
+  border-radius:10px;
+  font-size:14px;
+  padding:10px 13px;
+}
+.app .security-password-field {position:relative; display:block;}
+.app .security-password-field input {padding-right:46px;}
+.app .security-password-field button {
+  position:absolute; inset:0 2px 0 auto;
+  display:grid; place-items:center; width:44px;
+  background:transparent; color:var(--muted);
+}
+.app .security-password-field button:hover {color:var(--ink);}
+.app .security-hint,.app .security-form .security-notice {grid-column:1/-1;}
+.app .security-hint {color:var(--muted); font-size:11px!important; line-height:1.5!important;}
+.app .security-form > .primary {grid-column:1/-1; justify-self:start; min-width:174px;}
+.app .security-notice {display:flex; align-items:flex-start; gap:8px; border-radius:10px; border:1px solid var(--border); padding:11px 12px; font-size:12px!important; line-height:1.5!important;}
+.app .security-notice svg {flex:none; margin-top:1px;}
+.app .security-notice.success {color:var(--positive); background:var(--mint);}
+.app .security-notice.error {color:var(--negative); background:var(--surface-secondary);}
+.app .security-devices-heading {display:flex; align-items:center; justify-content:space-between; gap:12px;}
+.app .security-devices-heading .secondary {min-height:38px; padding:8px 12px;}
+.app .security-sessions {display:flex; flex-direction:column; gap:9px;}
+.app .security-session {display:flex; align-items:center; gap:12px; padding:13px; border:1px solid var(--border); border-radius:12px; background:var(--surface-secondary);}
+.app .security-device-icon {display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:11px; background:var(--surface); color:var(--muted);}
+.app .security-device-info {display:flex; flex:1; flex-direction:column; align-items:flex-start; min-width:0; gap:4px;}
+.app .security-device-info strong {font-size:12px; font-weight:600;}
+.app .security-device-info small {font-size:11px; line-height:1.4;}
+.app .security-current {font-size:10px; font-weight:600; color:var(--positive);}
+.app .security-session > .secondary {flex:none; min-height:36px; padding:7px 12px;}
+.app .security-revoke-all {align-self:flex-start;}
+.app .security-sessions-loading {display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
+.app .security-spin {animation:security-spin 1s linear infinite;}
+@keyframes security-spin {to{transform:rotate(360deg)}}
+@media(max-width:650px){
+ .app .security-form {grid-template-columns:1fr;}
+ .app .security-form label {grid-column:1/-1;}
+ .app .security-devices-heading {flex-wrap:wrap;}
+ .app .security-section {padding:16px;}
+ .app .security-session {flex-wrap:wrap;}
+ .app .security-session > .secondary {margin-left:auto;}
+}
+@media(prefers-reduced-motion:reduce){.app .security-spin {animation:none;}}
