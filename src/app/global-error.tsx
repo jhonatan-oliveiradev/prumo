@@ -1,2 +1,7 @@
 'use client';
-export default function GlobalError({reset}:{error:Error&{digest?:string};reset:()=>void}){return <html lang="pt-BR"><body style={{margin:0,background:'#030504',color:'#ecf0ed',fontFamily:'system-ui',minHeight:'100dvh',display:'grid',placeItems:'center'}}><main style={{padding:32,maxWidth:520}}><img src="/logo.svg" width="44" height="44" alt="Prumo"/><h1>Vamos retomar.</h1><p>Não foi possível carregar o Prumo. Tente novamente.</p><button onClick={reset} style={{padding:'14px 24px',cursor:'pointer'}}>Tentar novamente</button> <a href="/app" style={{color:'#a9c9b3'}}>Abrir meu espaço</a></main></body></html>}
+
+import {RecoveryScreen} from '@/components/recovery-screen';
+
+export default function GlobalError({reset}: {error: Error & {digest?: string}; reset: () => void}) {
+  return <html lang="pt-BR"><body style={{margin: 0, background: '#030504'}}><RecoveryScreen retry={reset} /></body></html>;
+}

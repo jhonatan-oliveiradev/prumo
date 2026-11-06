@@ -50,13 +50,14 @@ type Editor =
   | {kind: 'purchase'; purchase?: CreditPurchase}
   | {kind: 'payment'; invoice: CreditInvoice};
 
-export function CreditWallet({data, today, format, initialInvoice, onChange, onAccounts}: {
+export function CreditWallet({data, today, format, initialInvoice, onChange, onAccounts, onImport}: {
   data: FinanceData;
   today: string;
   format: (amount: number) => string;
   initialInvoice: CreditInvoiceRef | null;
   onChange: (data: FinanceData) => boolean;
   onAccounts: () => void;
+  onImport: () => void;
 }) {
   const confirm = useConfirm();
   const latest = useRef(data);
@@ -128,13 +129,13 @@ export function CreditWallet({data, today, format, initialInvoice, onChange, onA
           throw Error('Esta compra foi alterada ou faz parte de uma fatura paga.');
         }
         const amount = toCents(field('amount'));
-        const installments = Number(field('installments'));
+        const installments = existing?.statementCycle ? 1 : Number(field('installments'));
         if (!Number.isInteger(installments) || installments < 1 || installments > 60 || amount < installments) {
           throw Error('Escolha de 1 a 60 parcelas de pelo menos R$ 0,01.');
         }
         const draft = {...current, creditPurchases: (current.creditPurchases ?? []).filter(p => p.id !== existing?.id)};
         next = addCreditPurchase(draft, {
-          id: existing?.id ?? crypto.randomUUID(), cardId: existing?.cardId ?? card.id,
+          ...existing, id: existing?.id ?? crypto.randomUUID(), cardId: existing?.cardId ?? card.id,
           description: field('description'), amount, date, category: field('category'), installments,
         });
       } else {
@@ -192,7 +193,7 @@ export function CreditWallet({data, today, format, initialInvoice, onChange, onA
   return <>
     <div className="credit-toolbar">
       <p className="muted">Cadastre seus cartões e registre as compras e os pagamentos que fizer.</p>
-      <button className="primary" onClick={() => show({kind: 'card'})}><Plus size={17} />Adicionar cartão</button>
+      <div className="csv-actions"><button className="secondary" onClick={onImport}>Importar fatura CSV</button><button className="primary" onClick={() => show({kind: 'card'})}><Plus size={17} />Adicionar cartão</button></div>
     </div>
     {!editor && error && <p className="error" role="alert">{error}</p>}
     {card ? <div className="credit-layout">
@@ -257,7 +258,7 @@ export function CreditWallet({data, today, format, initialInvoice, onChange, onA
             <label>Valor total (R$)<input name="amount" inputMode="decimal" required defaultValue={editingPurchase ? (editingPurchase.amount / 100).toFixed(2) : undefined} /></label>
             <div className="form-grid">
               <label>Data da compra<DateField name="date" required defaultValue={editingPurchase?.date ?? today} /></label>
-              <label>Número de parcelas<input name="installments" type="number" min="1" max="60" required defaultValue={editingPurchase?.installments ?? 1} /></label>
+              <label>Número de parcelas<input name="installments" type="number" min="1" max="60" required defaultValue={editingPurchase?.installments ?? 1} disabled={Boolean(editingPurchase?.statementCycle)} /></label>
             </div>
             <label>Categoria<AppSelect name="category" defaultValue={editingPurchase?.category ?? 'Outros'}>{categories.map(category => <option key={category}>{category}</option>)}</AppSelect></label>
           </>}
