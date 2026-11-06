@@ -241,6 +241,40 @@
   border-radius: 6px;
   font-size: 12px;
 }
+.prumo-portal--auth .portal-auth-feedback {
+  padding: 14px 16px;
+  border: 1px solid #af7e5b77;
+  background: #3a28192a;
+  border-radius: 9px;
+  color: #f3e3d6;
+  overflow-wrap: anywhere;
+}
+.prumo-portal--auth .portal-auth-feedback strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: -.01em;
+}
+.prumo-portal--auth .portal-auth-feedback p {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #d8c8ba;
+}
+.prumo-portal--auth .portal-auth-feedback small {
+  display: block;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid #a9876840;
+  font-size: 10px;
+  color: #b9a99b;
+  line-height: 1.5;
+}
+.prumo-portal--auth .portal-auth-feedback code {
+  font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #ddccba;
+}
+
 .prumo-portal--auth .portal-unavailable {
   margin-top: 25px;
   max-width: 380px;
