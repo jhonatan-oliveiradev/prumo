@@ -7,7 +7,7 @@
     "build": "prisma generate && npm run check && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck",
+    "check": "node --import tsx --test src/lib/finance.test.ts src/lib/conflict-preview.test.ts src/lib/financial-attention.test.ts src/lib/app-navigation.test.ts src/lib/csv-import.test.ts && npm run typecheck",
     "test": "node --import tsx --test src/lib/*.test.ts",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy"
