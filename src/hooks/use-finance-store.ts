@@ -4,17 +4,9 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {emptyData,isFinanceData,type FinanceData} from '@/lib/finance';
 import {hydrateWorkspace,cloudStateForRevision,sameFinanceData} from '@/lib/cloud-state';
 import type {WorkspaceSnapshot} from '@/lib/sync';
+import {describeWorkspaceConflict,type ConflictPreview} from '@/lib/conflict-preview';
 export type CloudUser={id:string;name:string;email:string};
 type Cache={data:FinanceData;revision:number;dirty:boolean};
-type ConflictCounts={accounts:number;transactions:number;goals:number;cards:number;recurrences:number};
-export type ConflictPreview={device:ConflictCounts;cloud:ConflictCounts;cloudRevision:number};
-const conflictCounts=(data:FinanceData):ConflictCounts=>({
- accounts:data.accounts.length,
- transactions:data.transactions.length,
- goals:data.goals.length,
- cards:data.creditCards?.length??0,
- recurrences:data.recurringRules?.length??0,
-});
 export type SyncState='local'|'loading'|'connected'|'ready'|'saving'|'offline'|'conflict'|'error';
 const GUEST_KEY='prumo:data:v1';
 async function readRemote():Promise<WorkspaceSnapshot|null>{
@@ -31,11 +23,7 @@ export function useFinanceStore(){
  const owner=useRef<CloudUser|null>(null),current=useRef<Cache>({data:emptyData,revision:0,dirty:false}),busy=useRef(false),resolvingRef=useRef(false),conflict=useRef(false),undo=useRef<FinanceData|null>(null);
  const cacheKey=()=>owner.current?`prumo:cloud:v1:${owner.current.id}`:GUEST_KEY;
  function describeConflict(local:FinanceData,remote:WorkspaceSnapshot|null){
-  setConflictPreview({
-   device:conflictCounts(local),
-   cloud:conflictCounts(remote?.data??emptyData),
-   cloudRevision:remote?.revision??0,
-  });
+  setConflictPreview(describeWorkspaceConflict(local,remote?.data??emptyData,remote?.revision??0));
  }
  function writeCache(cache:Cache){localStorage.setItem(cacheKey(),owner.current?JSON.stringify(cache):JSON.stringify(cache.data));}
  const flush=useCallback(async()=>{
