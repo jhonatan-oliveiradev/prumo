@@ -42,7 +42,8 @@ export function accountBalance(data:FinanceData,accountId:string):number{
  const transfers=(data.transfers??[]).reduce((amount,t)=>{
   return amount+(t.targetAccountId===accountId?t.amount:0)-(t.sourceAccountId===accountId?t.amount:0);
  },0);
- return account.openingBalance+movements+transfers;
+ const reconciled=(data.reconciliations??[]).reduce((sum,entry)=>sum+(entry.accountId===accountId?entry.delta:0),0);
+ return account.openingBalance+movements+transfers+reconciled;
 }
 
 export function createAccountTransfer(data:FinanceData,transfer:AccountTransfer):FinanceData{
