@@ -157,6 +157,10 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
   for(const b of data.budgets){const bid=entityId(id,'budget',b.id);await tx.budget.upsert({where:{id:bid},create:{id:bid,clientId:b.id,workspaceId:id,name:b.category,startOn:dateOnly('1970-01-01'),endOn:dateOnly('9999-12-31')},update:{name:b.category}});await tx.budgetLine.create({data:{budgetId:bid,categoryId:categoryId(id,'EXPENSE',b.category),limitMinor:BigInt(b.limit)}});}
   await tx.goal.deleteMany({where:{workspaceId:id,id:{notIn:data.goals.map(g=>entityId(id,'goal',g.id))}}});
   for(const g of data.goals){const gid=entityId(id,'goal',g.id);await tx.goal.upsert({where:{id:gid},create:{id:gid,clientId:g.id,workspaceId:id,name:g.name,targetAmountMinor:BigInt(g.target),cover:g.cover??null,featured:g.featured??false},update:{name:g.name,targetAmountMinor:BigInt(g.target),cover:g.cover??null,featured:g.featured??false}});const movements=await tx.goalMovement.findMany({where:{goalId:gid}});const saved=movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n);const difference=BigInt(g.saved)-saved;if(difference!==0n)await tx.goalMovement.create({data:{workspaceId:id,goalId:gid,kind:difference>0n?'ADJUSTMENT_IN':'ADJUSTMENT_OUT',amountMinor:difference>0n?difference:-difference,occurredOn:new Date(),note:'Ajuste do valor reservado no aplicativo'}});}
+  // Cascading an account deletion would also erase immutable reconciliation history.
+  const protectedAccountIds=await tx.accountBalanceReconciliation.findMany({where:{workspaceId:id},select:{accountId:true}});
+  const keptAccountIds=new Set(data.accounts.map(a=>entityId(id,'account',a.id)));
+  if(protectedAccountIds.some(row=>!keptAccountIds.has(row.accountId)))throw new RevisionConflict();
   await tx.account.deleteMany({where:{workspaceId:id,id:{notIn:data.accounts.map(a=>entityId(id,'account',a.id))}}});
   await tx.auditLog.create({data:{workspaceId:id,actorId:profile.id,action:'workspace.sync',entityType:'Workspace',entityId:id,metadata:{revision:revision+1}}});
   return {revision:revision+1,updatedAt:new Date().toISOString()};
