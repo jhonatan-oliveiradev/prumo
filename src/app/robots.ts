@@ -1,18 +1,21 @@
 import type {MetadataRoute} from 'next';
 import {IS_PRODUCTION, SITE_URL} from '@/lib/seo';
 
-/** Never invite crawlers to index previews or private financial routes. */
+/**
+ * Google must be able to read HTML meta noindex on login, app and previews.
+ * Only API endpoints are crawl-blocked; page-level directives control indexing.
+ */
 export default function robots(): MetadataRoute.Robots {
-  if (!IS_PRODUCTION) {
-    return {rules: {userAgent: '*', disallow: '/'}};
-  }
+  const rules = {
+    userAgent: '*',
+    allow: '/',
+    disallow: '/api/',
+  };
+
+  if (!IS_PRODUCTION) return {rules};
 
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/app', '/login', '/cadastro', '/api/'],
-    },
+    rules,
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
   };
