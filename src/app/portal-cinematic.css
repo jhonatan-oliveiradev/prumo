@@ -132,6 +132,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   overflow: hidden;
   background:
     linear-gradient(140deg, #07150b55, #050b0580),
+    url('/videos/prumo-login-poster.webp') center / cover,
     url('/images/prumo-forest.webp') center / cover;
   clip-path: inset(0 0 0 100%);
   animation: cinematic-video-reveal 1000ms var(--portal-cinematic-ease) 790ms both;
@@ -203,6 +204,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   --portal-pointer-y: -500px;
   background:
     linear-gradient(130deg, #0a1a0a65, #0305044d),
+    url('/videos/prumo-login-poster.webp') center / cover,
     url('/images/prumo-forest.webp') center / cover;
 }
 .prumo-portal--cinematic .portal-video {
