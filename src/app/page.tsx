@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import Link from 'next/link';
+import {SITE_DESCRIPTION, SITE_TITLE, SITE_URL} from '@/lib/seo';
+import {SeoJsonLd} from '@/components/seo-json-ld';
 import {ArrowUpRight,ShieldCheck,Sparkles,Wallet,Repeat2,Target,Check} from 'lucide-react';
 import {ReferenceNavigation} from '@/components/reference-navigation';
 import {LandingHero} from '@/components/landing-hero';
@@ -15,8 +17,12 @@ import './landing-reference.css';
 import './landing-composition.css';
 import './landing-footer.css';
 import './landing-motion.css';
-export const metadata:Metadata={title:'Prumo — Seu dinheiro, no eixo.',description:'Acompanhe contas, despesas, vencimentos e metas no navegador ou no aplicativo.'};
-export default function Landing(){return <main className="landing reference-landing"><LandingMotion/><LandingScroll/><a href="#conteudo" className="ref-skip">Pular para o conteúdo</a><ReferenceNavigation/>
+export const metadata: Metadata = {
+  title: {absolute: SITE_TITLE},
+  description: SITE_DESCRIPTION,
+  alternates: {canonical: SITE_URL},
+};
+export default function Landing(){return <main className="landing reference-landing"><SeoJsonLd/><LandingMotion/><LandingScroll/><a href="#conteudo" className="ref-skip">Pular para o conteúdo</a><ReferenceNavigation/>
  <LandingHero/>
  <AlignmentField/>
  <div className="ref-capabilities" aria-label="Recursos do Prumo">{[{Icon:Wallet,label:'Contas e transações'},{Icon:Repeat2,label:'Compromissos e recorrências'},{Icon:Target,label:'Orçamentos e metas'},{Icon:Sparkles,label:'Orientação por IA'}].map(({Icon,label})=><a key={label} href="#recursos"><Icon size={19}/><MotionLabel>{label}</MotionLabel><ArrowUpRight size={13}/></a>)}</div>
