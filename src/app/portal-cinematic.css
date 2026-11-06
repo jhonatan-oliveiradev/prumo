@@ -321,6 +321,16 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 @media (max-width: 390px) {
   .prumo-portal--cinematic { padding: 12px; }
 }
+/* Keyboard users should never have to wait for controls to become visible. */
+.prumo-portal--cinematic:focus-within .portal-layout,
+.prumo-portal--cinematic:focus-within .portal-header,
+.prumo-portal--cinematic:focus-within .portal-content > *,
+.prumo-portal--cinematic:focus-within .portal-auth-form > * {
+  animation: none !important;
+  opacity: 1;
+  transform: none;
+}
+.prumo-portal--cinematic:focus-within .portal-art-reveal { clip-path: none; }
 /* No choreography or video motion when the user requests reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   .prumo-portal--cinematic .portal-atmosphere { display: none; }
