@@ -19,14 +19,22 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 .prumo-portal--cinematic .portal-atmosphere {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 45%, #213b2a50, #030504 75%);
   animation: cinematic-atmosphere-in 680ms ease-out both;
 }
-.prumo-portal--cinematic .portal-atmosphere > .gradient-ascii-container,
+.prumo-portal--cinematic .portal-atmosphere > .gradient-ascii-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 .prumo-portal--cinematic .portal-atmosphere .gradient-ascii-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
 }
@@ -123,7 +131,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 }
 .prumo-portal--cinematic .portal-art::after {
   z-index: 2;
-  background: linear-gradient(180deg, #050b0660, transparent 28%, #03050480);
+  background: linear-gradient(180deg, #050b0633, transparent 28%, #03050465);
 }
 .prumo-portal--cinematic .portal-art-reveal {
   position: absolute;
@@ -161,7 +169,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 }
 .prumo-portal--cinematic .portal-art-cross {
   z-index: 3;
-  opacity: .28;
+  opacity: .16;
   width: min(49%, 340px);
   border-color: #bbdfc650;
   box-shadow: 0 0 0 24px #c9e9cf10, 0 0 0 48px #c9e9cf06;
@@ -170,7 +178,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 .prumo-portal--cinematic .portal-art-code {
   z-index: 4;
   font-size: clamp(43px, 5.5vw, 84px);
-  opacity: .62;
+  opacity: .37;
   text-shadow: 0 3px 25px #030504bb;
   animation: cinematic-heading-rise 700ms var(--portal-cinematic-ease) 2110ms both;
 }
@@ -186,7 +194,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: linear-gradient(90deg, #0c1e1085, transparent 20%, transparent 70%, #02060372);
+  background: linear-gradient(90deg, #0c1e1038, transparent 20%, transparent 73%, #0206033b);
 }
 .prumo-portal--cinematic .portal-art-reveal::before {
   content: '';
@@ -194,7 +202,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(0deg, #0305044a, transparent 48%, #03050448);
+  background: linear-gradient(0deg, #03050420, transparent 48%, #03050426);
 }
 .prumo-portal--cinematic .portal-video-stage {
   position: absolute;
@@ -215,16 +223,18 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   height: 100%;
   object-fit: cover;
   object-position: 50% 45%;
-  filter: contrast(1.08) brightness(.65) saturate(.72);
+  filter: contrast(1.08) brightness(.75) saturate(.76);
+  opacity: .48;
 }
 .prumo-portal--cinematic .portal-video-ascii {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
-  opacity: .86;
-  mix-blend-mode: screen;
+  opacity: 1;
+  mix-blend-mode: normal;
   pointer-events: none;
 }
 .prumo-portal--cinematic .portal-video-pointer {
@@ -240,7 +250,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  opacity: .48;
+  opacity: .22;
   background-image: radial-gradient(#c6e2cd48 .65px, transparent .85px);
   background-size: 20px 20px;
   mask-image: linear-gradient(90deg, transparent, #000 22%, #000 80%, transparent);
