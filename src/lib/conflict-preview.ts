@@ -6,6 +6,7 @@ export type WorkspaceCounts = {
   goals: number;
   cards: number;
   recurrences: number;
+  transfers: number;
 };
 export type ConflictPreview = {device: WorkspaceCounts; cloud: WorkspaceCounts; cloudRevision: number};
 
@@ -17,6 +18,7 @@ export function countWorkspaceEntries(data: FinanceData): WorkspaceCounts {
     goals: data.goals.length,
     cards: data.creditCards?.length ?? 0,
     recurrences: data.recurringRules?.length ?? 0,
+    transfers: data.transfers?.length ?? 0,
   };
 }
 
