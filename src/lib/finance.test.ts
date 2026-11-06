@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {availableToday,emptyData,summary,toCents,isFinanceData,type FinanceData} from './finance';
-test('converte BRL em centavos e rejeita valores ambíguos',()=>{assert.equal(toCents('284,50'),28450);assert.throws(()=>toCents('-5'));assert.throws(()=>toCents('1.234,56'));assert.throws(()=>toCents('0'));});
+test('converte BRL em centavos e rejeita valores ambíguos',()=>{assert.equal(toCents('284,50'),28450);assert.throws(()=>toCents('-5'));assert.equal(toCents('1.234,56'),123456);assert.equal(toCents('R$ 1.234,56'),123456);assert.equal(toCents('1.234'),123400);assert.throws(()=>toCents('1,234'));assert.throws(()=>toCents('1.2.3'));assert.throws(()=>toCents('0'));});
 test('receita pendente não aumenta saldo; reserva e compromisso descontados uma vez',()=>{const d:FinanceData={...emptyData,accounts:[{id:'a',name:'Conta',openingBalance:100000}],goals:[{id:'g',name:'Reserva',saved:20000,target:50000}],transactions:[{id:'1',description:'Receita',amount:50000,type:'income',category:'Trabalho',date:'2026-11-01',accountId:'a',status:'paid',space:'work'},{id:'2',description:'Conta',amount:10000,type:'expense',category:'Moradia',date:'2026-11-10',accountId:'a',status:'pending',space:'personal'},{id:'3',description:'Previsão',amount:90000,type:'income',category:'Trabalho',date:'2026-11-10',accountId:'a',status:'pending',space:'work'}]};assert.deepEqual(summary(d,'2026-11'),{balance:150000,income:50000,expense:0,pending:10000,reserved:20000,available:120000});assert.ok(isFinanceData(d));assert.equal(isFinanceData({...d,transactions:[{...d.transactions[0],amount:-5}]}),false);});
 
 test('quitar pendência atualiza saldo uma vez e preserva data e desfazer', async()=>{

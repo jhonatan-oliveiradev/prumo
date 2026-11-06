@@ -3,6 +3,8 @@ import {useConfirm} from './confirmation-provider';
 import {CsvImportDialog} from './csv-import-dialog';
 import {AppLoading} from './app-loading';
 import {FinanceOnboarding} from './finance-onboarding';
+import {FinanceAttentionCard} from './finance-attention-card';
+import {financialAttention} from '@/lib/financial-attention';
 import {AppSelect,DateField,MonthField} from './form-controls';
 import {useEffect,useState,useRef,useMemo} from 'react';
 import {usePathname,useRouter} from 'next/navigation';
@@ -70,6 +72,7 @@ export function FinanceApp(){
  const invoices=useMemo(()=>creditInvoices(visible),[visible]);
  const openInvoices=invoices.filter(invoice=>!invoice.payment);
  const dueInvoices=openInvoices.filter(invoice=>invoice.dueOn.startsWith(month)||invoice.dueOn<today());
+ const attention=useMemo(()=>financialAttention(visible,today()),[visible]);
  const featuredCard=openInvoices[0]?.card??visible.creditCards?.[0];
  const featuredInvoice=openInvoices[0];
  function openInvoice(ref:CreditInvoiceRef){setSelectedInvoice({cardId:ref.cardId,cycle:ref.cycle});setPage('Cartões');}
@@ -183,6 +186,7 @@ export function FinanceApp(){
  {store.user&&!store.localAvailable&&store.state==='connected'&&<section className="migration-banner"><span className="category-icon"><Wallet size={20}/></span><div><h3>Bem-vindo, {displayName||'vamos começar'}</h3><p>Sua conta está conectada. Adicione a primeira conta financeira ou restaure um backup em Configurações.</p></div><button className="secondary" onClick={()=>open('account')}>Adicionar conta</button></section>}
  {storageError&&<p role="alert" className="alert">Os dados deste navegador não puderam ser lidos. Se você tiver um backup, restaure-o em Configurações.</p>}
  {page==='Visão geral'&&<>
+ <FinanceAttentionCard summary={attention} format={format} onView={()=>setPage('Compromissos')}/>
  {!onboardingDismissed&&(!data.accounts.length||(!data.transactions.length&&!data.creditPurchases?.length))&&<FinanceOnboarding
   data={data}
   onAddAccount={()=>open('account')}
