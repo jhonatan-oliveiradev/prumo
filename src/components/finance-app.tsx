@@ -170,7 +170,7 @@ export function FinanceApp(){
  {store.user&&!store.localAvailable&&store.state==='connected'&&<section className="migration-banner"><span className="category-icon"><Wallet size={20}/></span><div><h3>Bem-vindo, {displayName||'vamos começar'}</h3><p>Sua conta está conectada. Adicione a primeira conta financeira ou restaure um backup em Configurações.</p></div><button className="secondary" onClick={()=>open('account')}>Adicionar conta</button></section>}
  {storageError&&<p role="alert" className="alert">Os dados deste navegador não puderam ser lidos. Se você tiver um backup, restaure-o em Configurações.</p>}
  {page==='Visão geral'&&<>
- {!onboardingDismissed&&(!data.accounts.length||!data.transactions.length)&&<FinanceOnboarding
+ {!onboardingDismissed&&(!data.accounts.length||(!data.transactions.length&&!data.creditPurchases?.length))&&<FinanceOnboarding
   data={data}
   onAddAccount={()=>open('account')}
   onAddTransaction={()=>open('transaction')}
