@@ -20,6 +20,7 @@ export function sameFinanceData(left: FinanceData, right: FinanceData) {
   accounts: byId(data.accounts),
   transactions: byId(data.transactions),
   transfers: byId(data.transfers??[]),
+  reconciliations: byId(data.reconciliations??[]),
   budgets: byId(data.budgets),
   goals: byId(data.goals).map(goal=>({...goal,cover:goal.cover??'abstract',featured:goal.featured??false})),
   recurringRules: byId(data.recurringRules??[]),
