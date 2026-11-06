@@ -19,6 +19,23 @@ export const SOCIAL_DESCRIPTION =
  */
 export const IS_PRODUCTION = process.env.VERCEL_ENV === 'production';
 
+/** The exact artwork supplied by the product owner, stored in public/. */
+export const SOCIAL_IMAGE_PATH = '/opengraph-image.png';
+export const SOCIAL_IMAGE_WIDTH = 1672;
+export const SOCIAL_IMAGE_HEIGHT = 941;
+export const SOCIAL_IMAGE_ALT =
+  'Prumo: organize suas finanças com clareza. Contas, cartões, metas e relatórios em uma única plataforma.';
+
+/**
+ * Preview share tests must resolve the image from the actual preview deployment,
+ * not the old production page. This never changes the page's canonical URL.
+ */
+const previewHost = process.env.VERCEL_URL;
+export const SOCIAL_IMAGE_URL = !IS_PRODUCTION && previewHost
+  ? `https://${previewHost}${SOCIAL_IMAGE_PATH}`
+  : `${SITE_URL}${SOCIAL_IMAGE_PATH}`;
+
+
 export const PRIVATE_ROBOTS = {
   index: false,
   follow: false,
