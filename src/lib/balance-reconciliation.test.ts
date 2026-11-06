@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {emptyData,isFinanceData,summary,type FinanceData} from './finance';
 import {accountBalance,createAccountTransfer} from './account-transfers';
-import {parseAccountBalance,reconcileAccount,validReconciliations} from './balance-reconciliation';
+import {parseAccountBalance,reconcileAccount,validReconciliations,preservesReconciliationHistory} from './balance-reconciliation';
 import {parseWorkspaceInput} from './sync';
 import {sameFinanceData} from './cloud-state';
 
@@ -78,4 +78,14 @@ test('legacy snapshots without reconciliation records remain valid and equivalen
  assert.ok(isFinanceData(basic));
  assert.ok(isFinanceData({...basic,reconciliations:[]}));
  assert.ok(sameFinanceData(basic,{...basic,reconciliations:[]}));
+});
+
+test('an established audit trail cannot be removed or rewritten by restore/undo',()=>{
+ const first=reconcileAccount(basic,{id:'stable',accountId:'checking',date:'2026-11-06',balanceAfter:82000,note:'Conferido no extrato'});
+ assert.equal(preservesReconciliationHistory(first,basic),false);
+ assert.equal(preservesReconciliationHistory(first,{...first,reconciliations:[]}),false);
+ assert.equal(preservesReconciliationHistory(first,{...first,reconciliations:[{...first.reconciliations![0],note:'Substituído'}]}),false);
+ assert.equal(preservesReconciliationHistory(first,first),true);
+ const second=reconcileAccount(first,{id:'next',accountId:'checking',date:'2026-11-06',balanceAfter:83000,note:'Novo ajuste documentado'});
+ assert.equal(preservesReconciliationHistory(first,second),true);
 });
