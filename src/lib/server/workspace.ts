@@ -13,7 +13,7 @@ const categoryId=(workspace:string,type:string,name:string)=>entityId(workspace,
 const signedMovement=(kind:string,amount:bigint)=>['CONTRIBUTION','ADJUSTMENT_IN'].includes(kind)?amount:-amount;
 
 export async function readWorkspace(userId:string){
- const workspace=await prisma.workspace.findFirst({where:{id:workspaceId(userId),members:{some:{user:{authSubject:userId}}}},include:{transfers:true,importBatches:{where:{source:csvSource}},creditCards:{include:{purchases:true}},accounts:true,categories:true,transactions:true,recurringRules:true,budgets:{include:{lines:{include:{category:true}}}},goals:{include:{movements:true}}}});
+ const workspace=await prisma.workspace.findFirst({where:{id:workspaceId(userId),members:{some:{user:{authSubject:userId}}}},include:{reconciliations:true,transfers:true,importBatches:{where:{source:csvSource}},creditCards:{include:{purchases:true}},accounts:true,categories:true,transactions:true,recurringRules:true,budgets:{include:{lines:{include:{category:true}}}},goals:{include:{movements:true}}}});
  if(!workspace||workspace.revision===0)return null;
  const batchPrefix=csvBatchPrefix(workspace.id);
  const batchDates=new Map(workspace.importBatches.map(batch=>[batch.id,batch.createdAt.toISOString()]));
@@ -42,7 +42,19 @@ export async function readWorkspace(userId:string){
    amount:Number(row.amountMinor),date:row.occurredOn.toISOString().slice(0,10),
    ...(row.note?{note:row.note}:{}),
   }));
- const data:FinanceData={transfers,creditCards,creditPurchases,recurringRules:workspace.recurringRules.filter(r=>r.clientId&&r.interval!=='DAILY').map(r=>({id:r.clientId!,description:r.title,amount:Number(r.amountMinor),type:r.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===r.categoryId)?.name??'Outros',accountId:workspace.accounts.find(a=>a.id===r.accountId)!.clientId,space:r.space==='work'?'work':'personal',frequency:r.interval==='WEEKLY'?'weekly':r.interval==='YEARLY'?'yearly':'monthly',status:r.status==='ACTIVE'?'active':'paused',startsOn:r.startsOn.toISOString().slice(0,10),...(r.endsOn?{endsOn:r.endsOn.toISOString().slice(0,10)}:{}),...(r.generatedThroughOn?{generatedThrough:r.generatedThroughOn.toISOString().slice(0,10)}:{})})),version:1,name:workspace.displayName??'',accounts:workspace.accounts.filter(a=>!a.isArchived).map(a=>({id:a.clientId,name:a.name,openingBalance:Number(a.openingBalanceMinor)})),transactions:workspace.transactions.filter(t=>t.kind==='INCOME'||t.kind==='EXPENSE').filter(t=>t.status!=='VOID').map(t=>({...(t.importSource===csvSource?importFields(t.importBatchId,t.importExternalId):{}),...(t.creditCardId&&t.creditInvoiceCycle?{creditInvoice:{cardId:cardsById.get(t.creditCardId)!,cycle:t.creditInvoiceCycle}}:{}),...(t.recurringRuleId&&t.recurringScheduledOn?{recurrence:{ruleId:workspace.recurringRules.find(r=>r.id===t.recurringRuleId)!.clientId!,scheduledOn:t.recurringScheduledOn.toISOString().slice(0,10)}}:{}),...(t.installmentGroupId&&t.installmentNumber&&t.installmentCount?{installment:{groupId:t.installmentGroupId,number:t.installmentNumber,count:t.installmentCount}}:{}),id:t.clientId,description:t.title,amount:Number(t.amountMinor),type:t.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===t.categoryId)?.name??'Outros',date:t.occurredOn.toISOString().slice(0,10),accountId:workspace.accounts.find(a=>a.id===t.accountId)!.clientId,status:t.status==='CLEARED'?'paid':'pending',space:t.space==='work'?'work':'personal'})),budgets:workspace.budgets.filter(b=>b.status==='ACTIVE').flatMap(b=>b.lines.map(l=>({id:b.clientId,category:l.category.name,limit:Number(l.limitMinor)}))),goals:workspace.goals.filter(g=>g.status!=='ARCHIVED').map(g=>({id:g.clientId,name:g.name,target:Number(g.targetAmountMinor),...(isGoalCover(g.cover)?{cover:g.cover}:{}),...(g.featured?{featured:true}:{}),saved:Number(g.movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n))}))};
+ const reconciliationPrefix=entityId(workspace.id,'reconciliation','');
+ const reconciliations:NonNullable<FinanceData['reconciliations']>=workspace.reconciliations
+  .filter(row=>row.id.startsWith(reconciliationPrefix))
+  .map(row=>({
+   id:row.id.slice(reconciliationPrefix.length),
+   accountId:workspace.accounts.find(a=>a.id===row.accountId)!.clientId,
+   date:row.occurredOn.toISOString().slice(0,10),
+   balanceBefore:Number(row.balanceBeforeMinor),
+   balanceAfter:Number(row.balanceAfterMinor),
+   delta:Number(row.deltaMinor),
+   note:row.note,
+  }));
+ const data:FinanceData={reconciliations,transfers,creditCards,creditPurchases,recurringRules:workspace.recurringRules.filter(r=>r.clientId&&r.interval!=='DAILY').map(r=>({id:r.clientId!,description:r.title,amount:Number(r.amountMinor),type:r.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===r.categoryId)?.name??'Outros',accountId:workspace.accounts.find(a=>a.id===r.accountId)!.clientId,space:r.space==='work'?'work':'personal',frequency:r.interval==='WEEKLY'?'weekly':r.interval==='YEARLY'?'yearly':'monthly',status:r.status==='ACTIVE'?'active':'paused',startsOn:r.startsOn.toISOString().slice(0,10),...(r.endsOn?{endsOn:r.endsOn.toISOString().slice(0,10)}:{}),...(r.generatedThroughOn?{generatedThrough:r.generatedThroughOn.toISOString().slice(0,10)}:{})})),version:1,name:workspace.displayName??'',accounts:workspace.accounts.filter(a=>!a.isArchived).map(a=>({id:a.clientId,name:a.name,openingBalance:Number(a.openingBalanceMinor)})),transactions:workspace.transactions.filter(t=>t.kind==='INCOME'||t.kind==='EXPENSE').filter(t=>t.status!=='VOID').map(t=>({...(t.importSource===csvSource?importFields(t.importBatchId,t.importExternalId):{}),...(t.creditCardId&&t.creditInvoiceCycle?{creditInvoice:{cardId:cardsById.get(t.creditCardId)!,cycle:t.creditInvoiceCycle}}:{}),...(t.recurringRuleId&&t.recurringScheduledOn?{recurrence:{ruleId:workspace.recurringRules.find(r=>r.id===t.recurringRuleId)!.clientId!,scheduledOn:t.recurringScheduledOn.toISOString().slice(0,10)}}:{}),...(t.installmentGroupId&&t.installmentNumber&&t.installmentCount?{installment:{groupId:t.installmentGroupId,number:t.installmentNumber,count:t.installmentCount}}:{}),id:t.clientId,description:t.title,amount:Number(t.amountMinor),type:t.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===t.categoryId)?.name??'Outros',date:t.occurredOn.toISOString().slice(0,10),accountId:workspace.accounts.find(a=>a.id===t.accountId)!.clientId,status:t.status==='CLEARED'?'paid':'pending',space:t.space==='work'?'work':'personal'})),budgets:workspace.budgets.filter(b=>b.status==='ACTIVE').flatMap(b=>b.lines.map(l=>({id:b.clientId,category:l.category.name,limit:Number(l.limitMinor)}))),goals:workspace.goals.filter(g=>g.status!=='ARCHIVED').map(g=>({id:g.clientId,name:g.name,target:Number(g.targetAmountMinor),...(isGoalCover(g.cover)?{cover:g.cover}:{}),...(g.featured?{featured:true}:{}),saved:Number(g.movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n))}))};
  return {data,revision:workspace.revision,updatedAt:workspace.updatedAt.toISOString()};
 }
 
@@ -82,6 +94,33 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
    };
    await tx.transfer.upsert({where:{id:tid},create:{id:tid,workspaceId:id,...fields},update:fields});
   }
+
+  // Never erase or mutate history, including when an older client sends a snapshot.
+  if(data.reconciliations!==undefined){
+   const prefix=entityId(id,'reconciliation','');
+   const stored=await tx.accountBalanceReconciliation.findMany({where:{workspaceId:id,id:{startsWith:prefix}}});
+   const incoming=new Map(data.reconciliations.map(item=>[entityId(id,'reconciliation',item.id),item]));
+   for(const previous of stored){
+    const next=incoming.get(previous.id);
+    if(!next
+     ||previous.accountId!==entityId(id,'account',next.accountId)
+     ||previous.occurredOn.toISOString().slice(0,10)!==next.date
+     ||previous.balanceBeforeMinor!==BigInt(next.balanceBefore)
+     ||previous.balanceAfterMinor!==BigInt(next.balanceAfter)
+     ||previous.deltaMinor!==BigInt(next.delta)
+     ||previous.note!==next.note)throw new RevisionConflict();
+   }
+   for(const item of data.reconciliations){
+    const rid=entityId(id,'reconciliation',item.id);
+    if(stored.some(previous=>previous.id===rid))continue;
+    await tx.accountBalanceReconciliation.create({data:{
+     id:rid,workspaceId:id,accountId:entityId(id,'account',item.accountId),
+     occurredOn:dateOnly(item.date),deltaMinor:BigInt(item.delta),
+     balanceBeforeMinor:BigInt(item.balanceBefore),balanceAfterMinor:BigInt(item.balanceAfter),
+     note:item.note,
+    }});
+   }
+  }
   for(const r of data.recurringRules??[]){const rid=entityId(id,'recurring',r.id);const fields={title:r.description,amountMinor:BigInt(r.amount),kind:r.type==='income'?'INCOME' as const:'EXPENSE' as const,categoryId:categoryId(id,r.type==='income'?'INCOME':'EXPENSE',r.category),accountId:entityId(id,'account',r.accountId),space:r.space,interval:r.frequency==='weekly'?'WEEKLY' as const:r.frequency==='yearly'?'YEARLY' as const:'MONTHLY' as const,status:r.status==='active'?'ACTIVE' as const:'PAUSED' as const,startsOn:dateOnly(r.startsOn),endsOn:r.endsOn?dateOnly(r.endsOn):null,generatedThroughOn:r.generatedThrough?dateOnly(r.generatedThrough):null};await tx.recurringRule.upsert({where:{id:rid},create:{id:rid,workspaceId:id,clientId:r.id,...fields},update:fields});}
   const cardIds=(data.creditCards??[]).map(card=>entityId(id,'credit-card',card.id));
   for(const card of data.creditCards??[]){
@@ -118,6 +157,10 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
   for(const b of data.budgets){const bid=entityId(id,'budget',b.id);await tx.budget.upsert({where:{id:bid},create:{id:bid,clientId:b.id,workspaceId:id,name:b.category,startOn:dateOnly('1970-01-01'),endOn:dateOnly('9999-12-31')},update:{name:b.category}});await tx.budgetLine.create({data:{budgetId:bid,categoryId:categoryId(id,'EXPENSE',b.category),limitMinor:BigInt(b.limit)}});}
   await tx.goal.deleteMany({where:{workspaceId:id,id:{notIn:data.goals.map(g=>entityId(id,'goal',g.id))}}});
   for(const g of data.goals){const gid=entityId(id,'goal',g.id);await tx.goal.upsert({where:{id:gid},create:{id:gid,clientId:g.id,workspaceId:id,name:g.name,targetAmountMinor:BigInt(g.target),cover:g.cover??null,featured:g.featured??false},update:{name:g.name,targetAmountMinor:BigInt(g.target),cover:g.cover??null,featured:g.featured??false}});const movements=await tx.goalMovement.findMany({where:{goalId:gid}});const saved=movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n);const difference=BigInt(g.saved)-saved;if(difference!==0n)await tx.goalMovement.create({data:{workspaceId:id,goalId:gid,kind:difference>0n?'ADJUSTMENT_IN':'ADJUSTMENT_OUT',amountMinor:difference>0n?difference:-difference,occurredOn:new Date(),note:'Ajuste do valor reservado no aplicativo'}});}
+  // Cascading an account deletion would also erase immutable reconciliation history.
+  const protectedAccountIds=await tx.accountBalanceReconciliation.findMany({where:{workspaceId:id},select:{accountId:true}});
+  const keptAccountIds=new Set(data.accounts.map(a=>entityId(id,'account',a.id)));
+  if(protectedAccountIds.some(row=>!keptAccountIds.has(row.accountId)))throw new RevisionConflict();
   await tx.account.deleteMany({where:{workspaceId:id,id:{notIn:data.accounts.map(a=>entityId(id,'account',a.id))}}});
   await tx.auditLog.create({data:{workspaceId:id,actorId:profile.id,action:'workspace.sync',entityType:'Workspace',entityId:id,metadata:{revision:revision+1}}});
   return {revision:revision+1,updatedAt:new Date().toISOString()};

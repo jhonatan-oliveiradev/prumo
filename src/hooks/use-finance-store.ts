@@ -5,6 +5,7 @@ import {emptyData,isFinanceData,type FinanceData} from '@/lib/finance';
 import {hydrateWorkspace,cloudStateForRevision,sameFinanceData} from '@/lib/cloud-state';
 import type {WorkspaceSnapshot} from '@/lib/sync';
 import {describeWorkspaceConflict,type ConflictPreview} from '@/lib/conflict-preview';
+import {preservesReconciliationHistory} from '@/lib/balance-reconciliation';
 export type CloudUser={id:string;name:string;email:string};
 type Cache={data:FinanceData;revision:number;dirty:boolean};
 export type SyncState='local'|'loading'|'connected'|'ready'|'saving'|'offline'|'conflict'|'error';
@@ -102,8 +103,12 @@ export function useFinanceStore(){
  },[flush]);
  function change(next:FinanceData,recover=false){
   if(!isFinanceData(next)){setMessage('A alteração contém dados inválidos e não foi salva.');return false;}
+  if(!preservesReconciliationHistory(current.current.data,next)){
+   setMessage('O histórico de conciliações é permanente. Ele não pode ser removido ou modificado por uma restauração ou sincronização.');
+   return false;
+  }
   if(storageError&&!recover){setMessage('Restaure um backup válido antes de alterar os dados locais.');return false;}
-  try{const cache={data:next,revision:current.current.revision,dirty:Boolean(owner.current)};writeCache(cache);undo.current=current.current.data;current.current=cache;setData(next);if(recover)setStorageError(false);if(owner.current){if(!conflict.current)setState(navigator.onLine?'saving':'offline');void flush();}setMessage('Alterações salvas neste dispositivo.');return true;}
+  try{const cache={data:next,revision:current.current.revision,dirty:Boolean(owner.current)};writeCache(cache);undo.current=(next.reconciliations?.length??0)>(current.current.data.reconciliations?.length??0)?null:current.current.data;current.current=cache;setData(next);if(recover)setStorageError(false);if(owner.current){if(!conflict.current)setState(navigator.onLine?'saving':'offline');void flush();}setMessage('Alterações salvas neste dispositivo.');return true;}
   catch{setMessage('Não foi possível salvar neste dispositivo. A alteração não foi aplicada.');return false;}
  }
  function undoChange(){if(!undo.current)return;const previous=undo.current;if(change(previous))undo.current=null;}
