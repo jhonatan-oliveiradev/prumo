@@ -117,6 +117,7 @@ model Workspace {
   transactions       Transaction[]
   creditCards        CreditCard[]
   transfers          Transfer[]
+  reconciliations    AccountBalanceReconciliation[]
   budgets            Budget[]
   goals              Goal[]
   goalMovements      GoalMovement[]
@@ -155,6 +156,7 @@ model Account {
   transactions   Transaction[]
   transfersOut   Transfer[]      @relation("TransferSource")
   transfersIn    Transfer[]      @relation("TransferDestination")
+  reconciliations AccountBalanceReconciliation[]
   linkedGoals    Goal[]
   goalMovements  GoalMovement[]
   recurringRules RecurringRule[]
@@ -291,6 +293,24 @@ model Transfer {
   goalMovements GoalMovement[]
 
   @@index([workspaceId, occurredOn])
+}
+
+model AccountBalanceReconciliation {
+  id                 String   @id
+  workspaceId        String
+  accountId          String
+  deltaMinor         BigInt
+  balanceBeforeMinor BigInt
+  balanceAfterMinor  BigInt
+  occurredOn         DateTime @db.Date
+  note               String
+  createdAt          DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account   Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, occurredOn])
+  @@index([accountId, occurredOn])
 }
 
 model Budget {
