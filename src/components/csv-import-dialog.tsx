@@ -3,7 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {X} from 'lucide-react';
 import {useRef, useState, type FormEvent} from 'react';
-import {applyCsv, importBatches, maxCsvBytes, parseCsv, previewCsv, undoImportBatch, type CsvPreviewRow, type ImportTarget} from '@/lib/csv-import';
+import {applyCsv, importBatches, inspectCsv, validCsvMapping, maxCsvBytes, parseCsv, previewCsv, undoImportBatch, type CsvColumnMapping, type CsvInspection, type CsvPreviewRow, type ImportTarget} from '@/lib/csv-import';
 import {money, type FinanceData} from '@/lib/finance';
 import {useConfirm} from './confirmation-provider';
 import {AppSelect} from './form-controls';
@@ -14,6 +14,13 @@ type Preview = {
   rows: CsvPreviewRow[];
   invalidLines: number[];
   destination: string;
+};
+type PendingMapping = {
+  target: ImportTarget;
+  text: string;
+  fileName: string;
+  destination: string;
+  inspection: CsvInspection;
 };
 
 const dateLabel = (date: string) => date.split('-').reverse().join('/');
@@ -32,6 +39,8 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
   const latest = useRef(data);
   latest.current = data;
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [pendingMapping, setPendingMapping] = useState<PendingMapping | null>(null);
+  const [mapping, setMapping] = useState<CsvColumnMapping>({date: -1, description: -1, amount: -1});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -53,10 +62,19 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
       const target: ImportTarget = card
         ? {kind, cardId: id, cycle: String(form.get('cycle'))}
         : {kind, accountId: id, space: form.get('space') === 'work' ? 'work' : 'personal'};
-      const {rows, invalidLines} = parseCsv(await file.text());
-      const results = await previewCsv(rows, latest.current, target);
+      const text = await file.text();
+      const inspection = inspectCsv(text);
       const destination = destinations.find(item => item.id === id)?.name ?? '';
+      if (!validCsvMapping(inspection.suggested, inspection.headers.length)) {
+        // Unknown column names are never guessed or silently discarded.
+        setMapping(inspection.suggested);
+        setPendingMapping({target, text, fileName: file.name, destination, inspection});
+        return;
+      }
+      const {rows, invalidLines} = parseCsv(text, inspection.suggested);
+      const results = await previewCsv(rows, latest.current, target);
       setSelected(new Set(results.filter(row => !row.issue).map(row => row.key)));
+      setPendingMapping(null);
       setPreview({target, rows: results, invalidLines, destination});
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível ler o arquivo.');
@@ -64,6 +82,40 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
       setBusy(false);
     }
   }
+
+  async function reviewMapped(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!pendingMapping || busy) return;
+    setError('');
+    if (!validCsvMapping(mapping, pendingMapping.inspection.headers.length)) {
+      setError('Escolha três colunas diferentes para data, descrição e valor.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const {rows, invalidLines} = parseCsv(pendingMapping.text, mapping);
+      const results = await previewCsv(rows, latest.current, pendingMapping.target);
+      setSelected(new Set(results.filter(row => !row.issue).map(row => row.key)));
+      setPreview({target: pendingMapping.target, rows: results, invalidLines, destination: pendingMapping.destination});
+      setPendingMapping(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível interpretar as colunas selecionadas.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function changeColumn(field: keyof CsvColumnMapping, value: string) {
+    setMapping(current => ({...current, [field]: Number(value)}));
+    setError('');
+  }
+
+  const selectedRows = preview?.rows.filter(row => selected.has(row.key)) ?? [];
+  const blockedRows = preview?.rows.filter(row => row.blocked).length ?? 0;
+  const spendingTotal = selectedRows.filter(row => row.amount < 0 || preview?.target.kind === 'card')
+    .reduce((sum, row) => sum + Math.abs(row.amount), 0);
+  const incomeTotal = selectedRows.filter(row => row.amount > 0 && preview?.target.kind === 'bank')
+    .reduce((sum, row) => sum + row.amount, 0);
 
   function commit() {
     if (!preview) return;
@@ -101,12 +153,22 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
           {preview ? <>
             <div className="csv-summary" role="status">
               <strong>{preview.destination}{preview.target.kind === 'card' && ' · Fechamento ' + preview.target.cycle.split('-').reverse().join('/')}</strong>
-              <span>{selected.size} de {preview.rows.length} selecionados</span>
+              <span>{selected.size} de {preview.rows.length} selecionados · {blockedRows} bloqueados</span>
+            </div>
+            <div className="csv-review-metrics" aria-label="Resumo do lote selecionado">
+              <span><small>{card ? 'Compras a importar' : 'Saídas'}</small><strong>{money(spendingTotal)}</strong></span>
+              {!card && <span><small>Entradas</small><strong>{money(incomeTotal)}</strong></span>}
+              <span><small>Selecionados</small><strong>{selected.size}</strong></span>
             </div>
             {preview.invalidLines.length > 0 && <p className="installment-note">
               Linhas ignoradas por formato inválido: {preview.invalidLines.slice(0, 12).join(', ')}
               {preview.invalidLines.length > 12 && ' e mais ' + (preview.invalidLines.length - 12)}.
             </p>}
+            {preview.rows.length > 0 && <div className="csv-bulk-actions">
+              <span>Lançamentos do arquivo</span>
+              <div><button type="button" className="text-button" onClick={() => setSelected(new Set(preview.rows.filter(row => !row.issue).map(row => row.key)))}>Selecionar sem avisos</button>
+                <button type="button" className="text-button" onClick={() => setSelected(new Set())}>Limpar seleção</button></div>
+            </div>}
             {preview.rows.length > 0 ? <ul className="csv-rows" aria-label="Lançamentos do arquivo">
               {preview.rows.map(row => <li key={row.key}><label className="csv-row">
                 <input type="checkbox" disabled={row.blocked} checked={selected.has(row.key)} onChange={event => {
@@ -123,9 +185,38 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
               </label></li>)}
             </ul> : <p className="muted">O arquivo não tem lançamentos válidos.</p>}
             <div className="csv-actions">
-              <button type="button" className="secondary" onClick={() => {setPreview(null); setError('');}}>Escolher outro arquivo</button>
+              <button type="button" className="secondary" onClick={() => {setPreview(null); setPendingMapping(null); setError('');}}>Escolher outro arquivo</button>
               <button type="button" className="primary" disabled={!selected.size} onClick={commit}>Importar selecionados</button>
             </div>
+          </> : pendingMapping ? <>
+            <div className="csv-mapping-intro">
+              <strong>Identifique as colunas do arquivo</strong>
+              <p>Os títulos deste extrato não seguem um padrão reconhecido. Escolha qual coluna corresponde à data, à descrição e ao valor. O Prumo não altera o arquivo original.</p>
+              <small>{pendingMapping.fileName} · {pendingMapping.inspection.rowCount} linhas · separador {pendingMapping.inspection.delimiter === '\t' ? 'tabulação' : pendingMapping.inspection.delimiter}</small>
+            </div>
+            <form onSubmit={reviewMapped} className="csv-mapping-form">
+              {([
+                ['date', 'Data'],
+                ['description', 'Descrição'],
+                ['amount', 'Valor'],
+              ] as const).map(([field, label]) => <label key={field}>{label}
+                <AppSelect value={String(mapping[field])} onChange={event => changeColumn(field, event.target.value)} aria-label={`Coluna de ${label.toLowerCase()}`}>
+                  <option value="-1">Escolher coluna</option>
+                  {pendingMapping.inspection.headers.map((header, index) => <option key={index} value={String(index)}>{index + 1}. {header || 'Sem título'}</option>)}
+                </AppSelect>
+              </label>)}
+              <section className="csv-mapping-sample" aria-label="Exemplo das linhas do arquivo">
+                <h3>Prévia do arquivo</h3>
+                <div className="csv-mapping-scroll"><table>
+                  <thead><tr>{pendingMapping.inspection.headers.map((header, index) => <th scope="col" key={index}>{header || `Coluna ${index + 1}`}</th>)}</tr></thead>
+                  <tbody>{pendingMapping.inspection.sample.map((cells, index) => <tr key={index}>{pendingMapping.inspection.headers.map((_, column) => <td key={column}>{cells[column] ?? ''}</td>)}</tr>)}</tbody>
+                </table></div>
+              </section>
+              <div className="csv-actions">
+                <button type="button" className="secondary" onClick={() => {setPendingMapping(null);setError('');}}>Voltar ao arquivo</button>
+                <button type="submit" className="primary" disabled={busy || !validCsvMapping(mapping, pendingMapping.inspection.headers.length)}>{busy ? 'Analisando…' : 'Revisar lançamentos'}</button>
+              </div>
+            </form>
           </> : <>
             {destinations.length > 0 ? <form onSubmit={review}>
               <label>{card ? 'Cartão' : 'Conta'}<AppSelect name="destination" required>
@@ -136,7 +227,7 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
                   <option value="personal">Pessoal</option><option value="work">Trabalho</option>
                 </AppSelect></label>}
               <label>Arquivo CSV<input name="file" type="file" accept=".csv,text/csv" required /></label>
-              <p className="muted csv-help">Use as colunas Data, Descrição e Valor, com até 500 linhas por arquivo. {card
+              <p className="muted csv-help">CSV com até 500 linhas. Se os títulos das colunas forem diferentes, você poderá indicar data, descrição e valor na etapa seguinte. {card
                 ? 'Inclua o valor de cada parcela nesta fatura. Compras entram no mês selecionado.'
                 : 'Use valores negativos para despesas. Os lançamentos entram como pagos ou recebidos.'}</p>
               <button className="primary" disabled={busy}>{busy ? 'Lendo arquivo…' : 'Revisar lançamentos'}</button>

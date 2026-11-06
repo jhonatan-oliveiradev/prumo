@@ -53,3 +53,34 @@
   .csv-amount { grid-column: 2; }
   .csv-actions > button { flex: 1 1 10rem; }
 }
+
+/* Guided file mapping and readable review totals in the Prumo visual system. */
+.csv-mapping-intro {display:flex;flex-direction:column;gap:8px;margin:18px 0;}
+.csv-mapping-intro strong {font-size:14px;color:var(--ink);}
+.csv-mapping-intro p {font-size:12px;line-height:1.65;color:var(--muted);max-width:590px;}
+.csv-mapping-intro small {font-size:11px;color:var(--muted);overflow-wrap:anywhere;}
+.csv-mapping-form {display:flex;flex-direction:column;gap:14px;}
+.csv-mapping-form > label {display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:550;}
+.csv-mapping-form > label .select-trigger {width:100%;min-height:44px;}
+.csv-mapping-sample {border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:5px;}
+.csv-mapping-sample h3 {font-size:12px;padding:12px 14px;background:var(--surface-secondary);border-bottom:1px solid var(--border);}
+.csv-mapping-scroll {max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;}
+.csv-mapping-sample table {width:100%;border-collapse:collapse;text-align:left;font-size:11px;}
+.csv-mapping-sample th,.csv-mapping-sample td {padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border);}
+.csv-mapping-sample th {font-weight:600;color:var(--ink);background:var(--surface-secondary);}
+.csv-mapping-sample td {color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;}
+.csv-mapping-sample tr:last-child td {border-bottom:0;}
+.csv-review-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:16px 0;}
+.csv-review-metrics > span {display:flex;flex-direction:column;gap:6px;background:var(--surface-secondary);border:1px solid var(--border);border-radius:11px;padding:11px 13px;min-width:0;}
+.csv-review-metrics small {font-size:11px;color:var(--muted);}
+.csv-review-metrics strong {font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.csv-bulk-actions {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:17px 0 8px;font-size:12px;font-weight:600;}
+.csv-bulk-actions > div {display:flex;flex-wrap:wrap;align-items:center;gap:14px;}
+.csv-bulk-actions .text-button {font-size:11px;}
+.csv-dialog .csv-row input:focus-visible {outline-offset:4px;}
+@media(max-width:480px){
+ .csv-review-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .csv-mapping-sample th,.csv-mapping-sample td {padding:9px 10px;}
+ .csv-bulk-actions > div {width:100%;}
+}
+@media(prefers-reduced-motion:reduce){.csv-mapping-sample *, .csv-review-metrics *{scroll-behavior:auto;}}

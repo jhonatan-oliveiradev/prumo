@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {applyCsv, importBatches, parseCsv, previewCsv, undoImportBatch} from './csv-import';
+import {applyCsv, importBatches, inspectCsv, parseCsv, previewCsv, undoImportBatch, validCsvMapping} from './csv-import';
 import {creditInvoices, payCreditInvoice} from './credit';
 import type {FinanceData} from './finance';
 
@@ -63,4 +63,59 @@ test('reconhece cabeçalhos bancários comuns sem mudar o significado de sinal e
   assert.equal(result.rows.length,1);
   assert.equal(result.rows[0].amount,expected[index]);
  });
+});
+
+test('inspeciona colunas desconhecidas e permite mapeamento sem alterar valores',()=>{
+ const csv='Operação;Texto do lançamento;Quantia recebida;Data da operação\nA1;Mercado;-1.234,56;06/11/2026\nA2;Pagamento;205,40;2026-11-06';
+ const inspected=inspectCsv(csv);
+ assert.equal(inspected.delimiter,';');
+ assert.deepEqual(inspected.headers,['Operação','Texto do lançamento','Quantia recebida','Data da operação']);
+ assert.equal(inspected.sample[0][1],'Mercado');
+ assert.equal(inspected.rowCount,2);
+ assert.deepEqual(inspected.suggested,{date:-1,description:-1,amount:-1});
+ assert.throws(()=>parseCsv(csv),/Escolha cada coluna/);
+ const mapped={date:3,description:1,amount:2};
+ assert.equal(validCsvMapping(mapped,inspected.headers.length),true);
+ const result=parseCsv(csv,mapped);
+ assert.deepEqual(result.invalidLines,[]);
+ assert.deepEqual(result.rows.map(r=>[r.date,r.description,r.amount]),[
+  ['2026-11-06','Mercado',-123456],['2026-11-06','Pagamento',20540],
+ ]);
+});
+
+test('rejeita mapeamento ambíguo, com colunas repetidas ou inexistentes',()=>{
+ const csv='Primeira;Segunda;Terceira\n06/11/2026;Mercado;-40,00';
+ assert.equal(validCsvMapping({date:0,description:1,amount:1},3),false);
+ assert.equal(validCsvMapping({date:0,description:1,amount:3},3),false);
+ assert.equal(validCsvMapping({date:0,description:-1,amount:2},3),false);
+ assert.throws(()=>parseCsv(csv,{date:0,description:1,amount:1}),/três colunas diferentes/);
+ assert.throws(()=>parseCsv(csv,{date:0,description:1,amount:3}),/três colunas diferentes/);
+ const mapped=parseCsv(csv,{date:0,description:1,amount:2});
+ assert.equal(mapped.rows[0].amount,-4000);
+});
+
+test('detecta colunas entre aspas no CSV com vírgulas embutidas',()=>{
+ const csv='data,"Nome, do local","R$ total"\n06/11/2026,"Loja, Central","-29,90"';
+ const info=inspectCsv(csv);
+ assert.equal(info.delimiter,',');
+ assert.deepEqual(info.headers,['data','Nome, do local','R$ total']);
+ const parsed=parseCsv(csv,{date:0,description:1,amount:2});
+ assert.deepEqual(parsed.rows.map(r=>[r.description,r.amount]),[['Loja, Central',-2990]]);
+});
+
+test('protege limites de tamanho e quantidade de linhas na etapa de mapeamento',()=>{
+ assert.throws(()=>inspectCsv('a;b;c\n'+Array.from({length:501},()=> '2026-11-06;Mercado;-5').join('\n')),/500/);
+ assert.throws(()=>inspectCsv('x'.repeat(256*1024+10)),/256 KB/);
+});
+
+test('alerta sobre transferência interna e saldo inicial sem bloquear decisões informadas',async()=>{
+ const csv='Data;Descrição;Valor\n06/11/2026;Transferência entre contas;-250,00\n06/11/2026;Saldo anterior;1.250,00\n06/11/2026;Pagamento de cliente;400,00';
+ const rows=parseCsv(csv).rows;
+ const preview=await previewCsv(rows,data,bank);
+ assert.equal(preview.length,3);
+ assert.match(preview[0].issue??'',/transferência interna/i);
+ assert.match(preview[1].issue??'',/saldo inicial/i);
+ assert.equal(preview[0].blocked,false);
+ assert.equal(preview[1].blocked,false);
+ assert.equal(preview[2].issue,undefined);
 });
