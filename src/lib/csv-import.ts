@@ -13,6 +13,8 @@ export type CsvPreviewRow = CsvRow & {key: string; issue?: string; blocked: bool
 
 const normalized = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').trim().toLowerCase().replace(/\s+/g, ' ');
 const invoicePayment = (value: string) => /\b(fatura paga|pagamento recebido|pag(?:amento|to)?\b.{0,30}\b(?:fatura|cartao)|fatura\b.{0,20}\bpag(?:amento|to)?)\b/.test(normalized(value));
+const likelyInternalTransfer = (value: string) => /\btransferencia (interna|entre contas|para minha conta|da minha conta)\b|\btransf(?:erencia)? interna\b/.test(normalized(value));
+const likelyOpeningBalance = (value: string) => /\bsaldo (inicial|anterior|de abertura)\b/.test(normalized(value));
 
 function records(text: string, delimiter: string) {
   const result: {cells: string[]; line: number}[] = [];
@@ -162,6 +164,12 @@ function checkRow(row: CsvRow & {key: string}, data: FinanceData, target: Import
     if (candidates.some(t => t.date === row.date && normalized(t.description) === normalized(row.description))) {
       return result('Lançamento parecido nesta conta');
     }
+    // A bank transfer can otherwise be counted as an artificial expense/income.
+    // Warn without blocking; the user may be importing a genuine third-party payment.
+    if (likelyInternalTransfer(row.description))
+      return result('Pode ser transferência interna. Confira em Contas antes de incluir.');
+    if (likelyOpeningBalance(row.description))
+      return result('Pode ser saldo inicial, não uma movimentação. Confira antes de incluir.');
   }
   return result();
 }
