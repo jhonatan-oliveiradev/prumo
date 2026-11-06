@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import {
   IS_PRODUCTION, SITE_URL, SITE_NAME, SITE_TITLE,
   SITE_DESCRIPTION, SOCIAL_TITLE, SOCIAL_DESCRIPTION,
+  SOCIAL_IMAGE_URL, SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT, SOCIAL_IMAGE_ALT,
 } from '@/lib/seo';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -28,10 +29,11 @@ export const metadata: Metadata = {
     title: SOCIAL_TITLE,
     description: SOCIAL_DESCRIPTION,
     images: [{
-      url: '/opengraph-image',
-      width: 1200,
-      height: 630,
-      alt: 'Prumo — Seu dinheiro, no eixo. Controle financeiro pessoal.',
+      url: SOCIAL_IMAGE_URL,
+      secureUrl: SOCIAL_IMAGE_URL,
+      width: SOCIAL_IMAGE_WIDTH,
+      height: SOCIAL_IMAGE_HEIGHT,
+      alt: SOCIAL_IMAGE_ALT,
       type: 'image/png',
     }],
   },
@@ -39,7 +41,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SOCIAL_TITLE,
     description: SOCIAL_DESCRIPTION,
-    images: ['/opengraph-image'],
+    images: [{url: SOCIAL_IMAGE_URL, alt: SOCIAL_IMAGE_ALT}],
   },
   robots: IS_PRODUCTION
     ? {index: true, follow: true, googleBot: {index: true, follow: true}}
