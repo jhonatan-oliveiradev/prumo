@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {authNetworkFailure,authSessionFailure,describeAuthFailure} from './auth-feedback';
+import {SITE_URL} from './seo';
 
 test('credential failures never reveal whether an email address exists',()=>{
  const a=describeAuthFailure({status:401,code:'USER_NOT_FOUND',message:'user joe@example.com not found'},'signin');
@@ -36,4 +37,12 @@ test('network and unconfirmed session errors have different explanations',()=>{
  assert.equal(describeAuthFailure({status:0,code:'FETCH_ERROR'},'signin').category,'network');
  assert.equal(authSessionFailure().reference,'AUTH_SESSION');
  assert.notEqual(authNetworkFailure().title,authSessionFailure().title);
+});
+
+test('production Better Auth origin must be the canonical domain',()=>{
+  // Avoid reintroducing a real incident: the old Vercel alias was accepted
+  // as auth baseURL even though customers use the official www domain.
+  if(process.env.VERCEL_ENV!=='production')return;
+  assert.ok(process.env.BETTER_AUTH_URL,'Production must configure BETTER_AUTH_URL');
+  assert.equal(new URL(process.env.BETTER_AUTH_URL).origin,SITE_URL);
 });
