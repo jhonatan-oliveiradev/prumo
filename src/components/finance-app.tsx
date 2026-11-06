@@ -4,6 +4,8 @@ import {CsvImportDialog} from './csv-import-dialog';
 import {AppLoading} from './app-loading';
 import {AppSelect,DateField,MonthField} from './form-controls';
 import {useEffect,useState,useRef,useMemo} from 'react';
+import {usePathname,useRouter} from 'next/navigation';
+import {sectionFromPath,sectionPath} from '@/lib/app-navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import {LayoutDashboard,ArrowLeftRight,ChartNoAxesCombined,Target,Settings,Wallet,Plus,Eye,EyeOff,Sun,Moon,Download,Trash2,X,ArrowUpRight,ArrowDownLeft,Search,ChevronRight,Menu,ShieldCheck,CalendarDays,Check,Repeat2,Sparkles,CreditCard as CardIcon} from 'lucide-react';
 import {createInstallments,removePendingInstallments} from '@/lib/planning';
@@ -24,6 +26,10 @@ const navigation=[['Visão geral',LayoutDashboard],['Transações',ArrowLeftRigh
 const today=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
 type FormKind='transaction'|'account'|'budget'|'goal';
 export function FinanceApp(){
+ const pathname=usePathname();
+ const router=useRouter();
+ const page=sectionFromPath(pathname)??'Visão geral';
+ function setPage(next:string){const destination=sectionPath(next);if(destination!==pathname)router.push(destination,{scroll:false});}
  const store=useFinanceStore();
  const [selectedInvoice,setSelectedInvoice]=useState<CreditInvoiceRef|null>(null);
  const [editingGoal,setEditingGoal]=useState<Goal|null>(null);
@@ -38,7 +44,7 @@ export function FinanceApp(){
  const displayName=data.name.trim()||store.user?.name.trim()||'';
  const generatedDay=useRef('');
  useEffect(()=>{if(!ready||!['local','ready','connected'].includes(store.state)||generatedDay.current===today())return;generatedDay.current=today();try{const next=generateRecurrences(data,recurrenceHorizon(today()));if(next!==data)store.change(next);}catch(e){store.setMessage((e as Error).message);}},[ready,data,store.state]);
- const [page,setPage]=useState('Visão geral'),[dark,setDark]=useState(false),[menuOpen,setMenuOpen]=useState(false),[hidden,setHidden]=useState(false),[month,setMonth]=useState(today().slice(0,7)),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[statusFilter,setStatusFilter]=useState('all'),[space,setSpace]=useState('all'),[form,setForm]=useState<FormKind|null>(null),[editing,setEditing]=useState<Transaction|null>(null),[transactionType,setTransactionType]=useState<'income'|'expense'>('expense'),[error,setError]=useState('');
+ const [dark,setDark]=useState(false),[menuOpen,setMenuOpen]=useState(false),[hidden,setHidden]=useState(false),[month,setMonth]=useState(today().slice(0,7)),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[statusFilter,setStatusFilter]=useState('all'),[space,setSpace]=useState('all'),[form,setForm]=useState<FormKind|null>(null),[editing,setEditing]=useState<Transaction|null>(null),[transactionType,setTransactionType]=useState<'income'|'expense'>('expense'),[error,setError]=useState('');
  useEffect(()=>{try{setDark(localStorage.getItem('prumo:theme')?localStorage.getItem('prumo:theme')==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches)}catch{}if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});},[]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';},[dark]);
  function change(next:FinanceData){return store.change(next);}
