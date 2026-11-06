@@ -56,27 +56,67 @@ function parseAmount(text: string) {
   return Number.isSafeInteger(cents) ? cents : 0;
 }
 
-export function parseCsv(text: string): {rows: CsvRow[]; invalidLines: number[]} {
-  if (new TextEncoder().encode(text).byteLength > maxCsvBytes) throw Error('Escolha um CSV de até 256 KB.');
+/** Explicit mapping for bank exports that use unfamiliar column headings. */
+export type CsvColumnMapping = {date: number; description: number; amount: number};
+export type CsvInspection = {
+  delimiter: string;
+  headers: string[];
+  suggested: CsvColumnMapping;
+  sample: string[][];
+  rowCount: number;
+};
+
+const csvAliases = [
+  ['data','date','data da compra','data de lancamento','data lancamento','data da transacao','data da movimentacao','data do movimento','transaction date','data efetiva'],
+  ['descricao','description','titulo','title','historico','descricao do lancamento','descricao da transacao','historico do lancamento','estabelecimento','nome do estabelecimento','detalhes','memo','merchant'],
+  ['valor','amount','valor (r$)','valor r$','valor da transacao','valor da movimentacao','valor em reais','valor total','montante','amount (brl)'],
+];
+
+/** Read-only preview. Nothing from the file is sent to a server. */
+export function inspectCsv(text: string): CsvInspection {
+  if (new TextEncoder().encode(text).byteLength > maxCsvBytes)
+    throw Error('Escolha um CSV de até 256 KB.');
   const clean = text.replace(/^\uFEFF/, '');
-  const aliases = [
-    ['data','date','data da compra','data de lancamento','data lancamento','data da transacao','data da movimentacao','data do movimento','transaction date','data efetiva'],
-    ['descricao','description','titulo','title','historico','descricao do lancamento','descricao da transacao','historico do lancamento','estabelecimento','nome do estabelecimento','detalhes','memo','merchant'],
-    ['valor','amount','valor (r$)','valor r$','valor da transacao','valor da movimentacao','valor em reais','valor total','montante','amount (brl)'],
-  ];
-  let parsed: ReturnType<typeof records> | undefined;
-  let columns: number[] = [];
-  for (const separator of [';', ',', '\t']) {
-    const header = clean.split(/\r?\n/,1)[0].split(separator).map(value => normalized(value.replace(/"/g,'')));
-    const indices = aliases.map(group => header.findIndex(value => group.includes(value)));
-    if (indices.every(index => index >= 0)) {
-      parsed = records(clean, separator);
-      columns = indices;
-      break;
-    }
+  let candidate: {delimiter: string; parsed: ReturnType<typeof records>; indices: number[]; score: number} | undefined;
+  for (const delimiter of [';', ',', '\t']) {
+    const parsed = records(clean, delimiter);
+    const headers = parsed[0]?.cells ?? [];
+    if (headers.length < 3) continue;
+    const normalizedHeaders = headers.map(normalized);
+    const indices = csvAliases.map(aliases => normalizedHeaders.findIndex(column => aliases.includes(column)));
+    const matches = indices.filter(index => index >= 0).length;
+    const score = matches * 100 + headers.length;
+    if (!candidate || score > candidate.score) candidate = {delimiter, parsed, indices, score};
   }
-  if (!parsed) throw Error('Não reconhecemos as colunas do CSV. O arquivo precisa identificar data, descrição e valor; confira os nomes no cabeçalho.');
-  if (parsed.length - 1 > maxCsvRows) throw Error('Divida o CSV em arquivos de até 500 lançamentos.');
+  if (!candidate)
+    throw Error('Este CSV precisa ter ao menos três colunas: data, descrição e valor.');
+  if (candidate.parsed.length - 1 > maxCsvRows)
+    throw Error('Divida o CSV em arquivos de até 500 lançamentos.');
+  const [date, description, amount] = candidate.indices;
+  return {
+    delimiter: candidate.delimiter,
+    headers: candidate.parsed[0].cells,
+    suggested: {date, description, amount},
+    sample: candidate.parsed.slice(1, 4).map(row => row.cells),
+    rowCount: candidate.parsed.length - 1,
+  };
+}
+
+export function validCsvMapping(mapping: CsvColumnMapping, columnCount: number): boolean {
+  const indices = [mapping.date, mapping.description, mapping.amount];
+  return indices.every(index => Number.isInteger(index) && index >= 0 && index < columnCount)
+    && new Set(indices).size === 3;
+}
+
+export function parseCsv(text: string, mapping?: CsvColumnMapping): {rows: CsvRow[]; invalidLines: number[]} {
+  const inspection = inspectCsv(text);
+  const selected = mapping ?? inspection.suggested;
+  if (!mapping && !validCsvMapping(selected, inspection.headers.length))
+    throw Error('Não reconhecemos as colunas de data, descrição e valor. Escolha cada coluna manualmente.');
+  if (!validCsvMapping(selected, inspection.headers.length))
+    throw Error('Escolha três colunas diferentes: data, descrição e valor.');
+  const parsed = records(text.replace(/^\uFEFF/, ''), inspection.delimiter);
+  const columns = [selected.date, selected.description, selected.amount];
   const rows: CsvRow[] = [], invalidLines: number[] = [];
   for (const {cells, line} of parsed.slice(1)) {
     const [rawDate, rawDescription, rawAmount] = columns.map(index => cells[index] ?? '');
