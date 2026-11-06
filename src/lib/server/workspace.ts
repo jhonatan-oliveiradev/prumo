@@ -63,7 +63,14 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
   }
   for(const account of data.accounts){const aid=entityId(id,'account',account.id);await tx.account.upsert({where:{id:aid},create:{id:aid,workspaceId:id,clientId:account.id,name:account.name,openingBalanceMinor:BigInt(account.openingBalance)},update:{name:account.name,openingBalanceMinor:BigInt(account.openingBalance)}});}
   // Atomic zero-sum records: deletions and upserts share the same workspace revision.
-  await tx.transfer.deleteMany({where:{workspaceId:id,id:{notIn:(data.transfers??[]).map(t=>entityId(id,'transfer',t.id))}}});
+  // A legacy client without this field must never erase transfers created by a newer client.
+  // Other transfer types in the domain are not owned by the Prumo local-first editor.
+  if(data.transfers!==undefined){
+   const prefix=entityId(id,'transfer','');
+   await tx.transfer.deleteMany({where:{workspaceId:id,id:{
+    startsWith:prefix,notIn:data.transfers.map(t=>entityId(id,'transfer',t.id)),
+   }}});
+  }
   for(const transfer of data.transfers??[]){
    const tid=entityId(id,'transfer',transfer.id);
    const fields={
