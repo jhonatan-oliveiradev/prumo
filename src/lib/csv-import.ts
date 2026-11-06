@@ -1,4 +1,5 @@
 import {creditInvoices} from './credit';
+import {matchCategoryRule} from './category-rules';
 import {isFinanceData, validDate, type FinanceData, type Transaction} from './finance';
 
 export const maxCsvBytes = 256 * 1024;
@@ -9,7 +10,7 @@ export type ImportTarget =
   | {kind: 'card'; cardId: string; cycle: string};
 
 type CsvRow = {line: number; date: string; description: string; amount: number};
-export type CsvPreviewRow = CsvRow & {key: string; issue?: string; blocked: boolean};
+export type CsvPreviewRow = CsvRow & {key: string; issue?: string; blocked: boolean; suggestedCategory?: string};
 
 const normalized = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').trim().toLowerCase().replace(/\s+/g, ' ');
 const invoicePayment = (value: string) => /\b(fatura paga|pagamento recebido|pag(?:amento|to)?\b.{0,30}\b(?:fatura|cartao)|fatura\b.{0,20}\bpag(?:amento|to)?)\b/.test(normalized(value));
@@ -184,7 +185,11 @@ export async function previewCsv(rows: CsvRow[], data: FinanceData, target: Impo
     const identity = JSON.stringify([...destination, row.date, row.amount, normalized(row.description)]);
     const occurrence = (occurrences.get(identity) ?? 0) + 1;
     occurrences.set(identity, occurrence);
-    return checkRow({...row, key: await fingerprint(JSON.stringify([identity, occurrence]))}, data, target, existing, invoices);
+    const result=checkRow({...row, key: await fingerprint(JSON.stringify([identity, occurrence]))}, data, target, existing, invoices);
+    const type=target.kind==='card'||row.amount<0?'expense':'income';
+    const space=target.kind==='bank'?target.space:data.creditCards?.find(card=>card.id===target.cardId)?.space??'personal';
+    const matched=matchCategoryRule(data,{description:row.description,type,space});
+    return {...result,...(matched?{suggestedCategory:matched.category}:{})};
   }));
 }
 
@@ -200,18 +205,23 @@ export function applyCsv(data: FinanceData, target: ImportTarget, rows: CsvPrevi
   for (const row of rows) {
     const current = checkRow(row, data, target, existing, invoices);
     if (row.blocked || current.blocked || current.issue !== row.issue) throw Error('Seus registros mudaram. Revise novamente a prévia antes de importar.');
+    const type=target.kind==='card'||row.amount<0?'expense':'income';
+    const space=target.kind==='bank'?target.space:data.creditCards?.find(card=>card.id===target.cardId)?.space??'personal';
+    const matched=matchCategoryRule(data,{description:row.description,type,space});
+    if((row.suggestedCategory??null)!==(matched?.category??null))
+      throw Error('As regras de categorização mudaram. Atualize a prévia antes de importar.');
     existing.add(row.key);
   }
   const next: FinanceData = target.kind === 'bank' ? {
     ...data, transactions: [...data.transactions, ...rows.map((row): Transaction => ({
       id: newId(), description: row.description, date: row.date, amount: Math.abs(row.amount),
-      type: row.amount < 0 ? 'expense' : 'income', status: 'paid', category: 'Outros',
+      type: row.amount < 0 ? 'expense' : 'income', status: 'paid', category: row.suggestedCategory ?? 'Outros',
       space: target.space, accountId: target.accountId, imported: {batchId, key: row.key, importedAt},
     }))],
   } : {
     ...data, creditPurchases: [...(data.creditPurchases ?? []), ...rows.map(row => ({
       id: newId(), cardId: target.cardId, description: row.description, date: row.date, amount: row.amount,
-      category: 'Outros', installments: 1, statementCycle: target.cycle, imported: {batchId, key: row.key, importedAt},
+      category: row.suggestedCategory ?? 'Outros', installments: 1, statementCycle: target.cycle, imported: {batchId, key: row.key, importedAt},
     }))],
   };
   if (!isFinanceData(next)) throw Error('Os dados selecionados não puderam ser importados.');
