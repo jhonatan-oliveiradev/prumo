@@ -18,6 +18,7 @@ export function sameFinanceData(left: FinanceData, right: FinanceData) {
  const normalize = (data: FinanceData) => ({
   ...data,
   accounts: byId(data.accounts),
+  customCategories:[...(data.customCategories??[])].sort((a,b)=>a.localeCompare(b,'pt-BR')),
   transactions: byId(data.transactions),
   transfers: byId(data.transfers??[]),
   reconciliations: byId(data.reconciliations??[]),

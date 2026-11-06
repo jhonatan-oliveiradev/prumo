@@ -7,7 +7,7 @@ export function parseWorkspaceInput(value:unknown):{data:FinanceData;revision:nu
   const input=value as {data:FinanceData;revision:number};
   if(!Number.isSafeInteger(input.revision)||input.revision<0||input.revision>=2147483647||!isFinanceData(input.data))return null;
   const d=input.data;
-  if(d.name.length>100||d.accounts.length>100||d.transactions.length>10000||d.goals.length>100||d.budgets.length>100||((d.transfers?.length??0)>2000)||((d.reconciliations?.length??0)>2000))return null;
+  if(d.name.length>100||d.accounts.length>100||d.transactions.length>10000||d.goals.length>100||d.budgets.length>100||((d.customCategories?.length??0)>30)||((d.transfers?.length??0)>2000)||((d.reconciliations?.length??0)>2000))return null;
   const ids=[d.accounts,d.transactions,d.goals,d.budgets,d.transfers??[],d.reconciliations??[]];
   if(ids.some(list=>list.some(x=>!x.id||x.id.length>100)||new Set(list.map(x=>x.id)).size!==list.length))return null;
   if(d.accounts.some(a=>!a.name||a.name.length>100)||d.goals.some(g=>!g.name||g.name.length>100)||d.transactions.some(t=>!t.description||t.description.length>200))return null;
