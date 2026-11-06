@@ -328,6 +328,27 @@ header > div:first-child { min-width: 0; }
 .sync-status { background: transparent; color: var(--muted); text-align: right; font: inherit; min-height: 44px; }
 .sync-conflict { border: 1px solid var(--warning); padding: 18px; border-radius: 12px; }
 .sync-conflict p { margin: 12px 0; }
+
+.conflict-comparison {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--ink);
+}
+.conflict-comparison > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.conflict-comparison strong { font-size: 12px; }
+.conflict-comparison span { color: var(--muted); font-size: 11px; }
+@media(max-width:440px) { .conflict-comparison { grid-template-columns: 1fr; } }
+
 .sync-conflict, .sync-error, .sync-offline { color: var(--warning); }
 @media(max-width:640px) { .sidebar .account-control { display: none; } }
 
