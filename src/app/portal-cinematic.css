@@ -3,8 +3,8 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
 
 /*
  * Auth cinematic sequence
- * 00:00 atmosphere / 00:38 shell / 00:75 video sweep
- * 01:65 heading / 02:00 sequential controls
+ * 00:00 atmosphere / 00:65 shell / 01:22 video sweep
+ * 02:08 heading / 02:58 sequential controls
  * Only login and signup opt in. Recovery routes stay untouched.
  */
 .prumo-portal--cinematic {
@@ -43,7 +43,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   position: relative;
   z-index: 2;
   flex: none;
-  animation: cinematic-heading-rise 720ms var(--portal-cinematic-ease) 520ms both;
+  animation: cinematic-heading-rise 720ms var(--portal-cinematic-ease) 750ms both;
 }
 .prumo-portal--cinematic .portal-layout {
   position: relative;
@@ -59,7 +59,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   background: #070b08;
   border: 1px solid #354638;
   box-shadow: 0 24px 105px #00000080, 0 1px 0 #a4d5b315 inset;
-  animation: cinematic-frame-assemble 620ms var(--portal-cinematic-ease) 380ms both;
+  animation: cinematic-frame-assemble 600ms var(--portal-cinematic-ease) 650ms both;
 }
 .prumo-portal--cinematic .portal-layout::after {
   content: '';
@@ -81,34 +81,34 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   scrollbar-color: #334738 transparent;
 }
 .prumo-portal--cinematic .portal-auth-heading {
-  animation: cinematic-heading-rise 740ms var(--portal-cinematic-ease) 1650ms both;
+  animation: cinematic-heading-rise 740ms var(--portal-cinematic-ease) 2080ms both;
 }
 .prumo-portal--cinematic .portal-social {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2000ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2580ms both;
 }
 .prumo-portal--cinematic .portal-divider {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2090ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2660ms both;
 }
 .prumo-portal--cinematic .portal-auth-form {
   animation: none;
 }
 .prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(1) {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2190ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2740ms both;
 }
 .prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(2) {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2270ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2820ms both;
 }
 .prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(3) {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2350ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2900ms both;
 }
 .prumo-portal--cinematic .portal-auth-form > .portal-submit {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2440ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2990ms both;
 }
 .prumo-portal--cinematic .portal-unavailable {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2140ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2700ms both;
 }
 .prumo-portal--cinematic .portal-actions {
-  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2520ms both;
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 3070ms both;
 }
 .prumo-portal--cinematic .portal-art {
   position: relative;
@@ -135,7 +135,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
     url('/videos/prumo-login-poster.webp') center / cover,
     url('/images/prumo-forest.webp') center / cover;
   clip-path: inset(0 0 0 100%);
-  animation: cinematic-video-reveal 1000ms var(--portal-cinematic-ease) 790ms both;
+  animation: cinematic-video-reveal 850ms var(--portal-cinematic-ease) 1220ms both;
 }
 .prumo-portal--cinematic .portal-sweep-beam {
   position: absolute;
@@ -148,7 +148,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   pointer-events: none;
   background: #badbc1;
   box-shadow: 0 0 14px 5px #91b59c4d, 0 0 48px 13px #91b59c12;
-  animation: cinematic-sweep-beam 1000ms var(--portal-cinematic-ease) 790ms both;
+  animation: cinematic-sweep-beam 850ms var(--portal-cinematic-ease) 1220ms both;
 }
 .prumo-portal--cinematic .portal-art::selection { background: transparent; }
 .prumo-portal--cinematic .portal-art .portal-art-kicker {
@@ -157,7 +157,7 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   left: 24px;
   color: #c1e0c9;
   text-shadow: 0 2px 8px #000a;
-  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 1850ms both;
+  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 2110ms both;
 }
 .prumo-portal--cinematic .portal-art-cross {
   z-index: 3;
@@ -165,19 +165,19 @@ html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
   width: min(49%, 340px);
   border-color: #bbdfc650;
   box-shadow: 0 0 0 24px #c9e9cf10, 0 0 0 48px #c9e9cf06;
-  animation: cinematic-orbit-breathe 11s ease-in-out 1900ms infinite alternate;
+  animation: cinematic-orbit-breathe 11s ease-in-out 2150ms infinite alternate;
 }
 .prumo-portal--cinematic .portal-art-code {
   z-index: 4;
   font-size: clamp(43px, 5.5vw, 84px);
   opacity: .62;
   text-shadow: 0 3px 25px #030504bb;
-  animation: cinematic-heading-rise 700ms var(--portal-cinematic-ease) 1850ms both;
+  animation: cinematic-heading-rise 700ms var(--portal-cinematic-ease) 2110ms both;
 }
 .prumo-portal--cinematic .portal-art-caption {
   z-index: 4;
   text-shadow: 0 2px 9px #000d;
-  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 1970ms both;
+  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 2250ms both;
 }
 .prumo-portal--cinematic .portal-art::marker { color: transparent; }
 .prumo-portal--cinematic .portal-art-reveal::after {
