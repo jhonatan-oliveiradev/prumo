@@ -1,4 +1,2 @@
-import './credit-wallet.css';
-import './goal-cards.css';
-import {FinanceApp} from '@/components/finance-app';
-export default function AppPage(){return <FinanceApp/>}
+/** Workspace chrome lives in /app/layout.tsx and persists across routes. */
+export default function AppPage(){return null;}
