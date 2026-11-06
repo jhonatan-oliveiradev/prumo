@@ -25,6 +25,23 @@ export const emptyData:FinanceData = {version:1,name:'',accounts:[],transactions
 export const money=(cents:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
 export function toCents(value:string){if(!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim()))throw new Error('Informe um valor positivo, como 125,50.');const n=Math.round(Number(value.replace(',','.'))*100);if(!Number.isSafeInteger(n)||n<=0)throw new Error('Informe um valor válido maior que zero.');return n;}
 export function summary(data:FinanceData,month:string){const paid=data.transactions.filter(t=>t.status==='paid');const current=data.transactions.filter(t=>t.date.startsWith(month));const total=(list:Transaction[],type:string)=>list.filter(t=>t.type===type).reduce((s,t)=>s+t.amount,0);const balance=data.accounts.reduce((s,a)=>s+a.openingBalance,0)+total(paid,'income')-total(paid,'expense');const pending=total(current.filter(t=>t.status==='pending'),'expense')+creditInvoices(data).filter(i=>!i.payment&&i.dueOn.startsWith(month)).reduce((sum,i)=>sum+i.amount,0);const reserved=data.goals.reduce((s,g)=>s+g.saved,0);return {balance,income:total(current.filter(t=>t.status==='paid'),'income'),expense:total(current.filter(t=>t.status==='paid'),'expense'),pending,reserved,available:balance-pending-reserved};}
+/**
+ * The actual amount free to spend today, independent of a selected reporting
+ * month. Includes overdue unpaid items and unpaid card invoices exactly once.
+ * Receivables never increase the conservative balance until received.
+ */
+export function availableToday(data:FinanceData,today:string){
+ const month=today.slice(0,7);
+ const {balance,reserved}=summary(data,month);
+ const pendingExpense=commitments(data,month,today)
+  .filter(t=>t.type==='expense').reduce((sum,t)=>sum+t.amount,0);
+ const cardBills=creditInvoices(data)
+  .filter(i=>!i.payment&&(i.dueOn<today||i.dueOn.startsWith(month)))
+  .reduce((sum,i)=>sum+i.amount,0);
+ return {available:balance-reserved-pendingExpense-cardBills,
+  overdueExpenses:pendingExpense+cardBills,
+  reserved,balance};
+}
 export function isInstallment(value:unknown):value is Installment{if(!value||typeof value!=='object')return false;const i=value as Installment;return typeof i.groupId==='string'&&i.groupId.length>0&&i.groupId.length<=100&&Number.isInteger(i.number)&&Number.isInteger(i.count)&&i.count>=2&&i.count<=60&&i.number>=1&&i.number<=i.count;}
 export const validDate=(d:unknown):d is string=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&!isNaN(Date.parse(d))&&new Date(d).toISOString().slice(0,10)===d;
 export function isRecurringRule(r:RecurringRule){return r&&typeof r.id==='string'&&r.id.length>0&&r.id.length<=60&&typeof r.description==='string'&&r.description.length>0&&r.description.length<=100&&Number.isSafeInteger(r.amount)&&r.amount>0&&['income','expense'].includes(r.type)&&categories.includes(r.category)&&['personal','work'].includes(r.space)&&['weekly','monthly','yearly'].includes(r.frequency)&&['active','paused'].includes(r.status)&&validDate(r.startsOn)&&r.startsOn>='2000-01-01'&&(!r.endsOn||(validDate(r.endsOn)&&r.endsOn>=r.startsOn))&&(!r.generatedThrough||validDate(r.generatedThrough));}
