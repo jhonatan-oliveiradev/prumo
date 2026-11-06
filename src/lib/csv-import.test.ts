@@ -107,3 +107,15 @@ test('protege limites de tamanho e quantidade de linhas na etapa de mapeamento',
  assert.throws(()=>inspectCsv('a;b;c\n'+Array.from({length:501},()=> '2026-11-06;Mercado;-5').join('\n')),/500/);
  assert.throws(()=>inspectCsv('x'.repeat(256*1024+10)),/256 KB/);
 });
+
+test('alerta sobre transferência interna e saldo inicial sem bloquear decisões informadas',async()=>{
+ const csv='Data;Descrição;Valor\n06/11/2026;Transferência entre contas;-250,00\n06/11/2026;Saldo anterior;1.250,00\n06/11/2026;Pagamento de cliente;400,00';
+ const rows=parseCsv(csv).rows;
+ const preview=await previewCsv(rows,data,bank);
+ assert.equal(preview.length,3);
+ assert.match(preview[0].issue??'',/transferência interna/i);
+ assert.match(preview[1].issue??'',/saldo inicial/i);
+ assert.equal(preview[0].blocked,false);
+ assert.equal(preview[1].blocked,false);
+ assert.equal(preview[2].issue,undefined);
+});
