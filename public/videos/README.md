@@ -1,15 +1,15 @@
-# Vídeo de acesso do Prumo
+# Assets do login cinematográfico do Prumo
 
-O painel de acesso (`/login` e `/cadastro`) usa três assets binários otimizados, provenientes do vídeo entregue pelo usuário.
+Esses arquivos estão versionados no repositório e são usados nas páginas `/login` e `/cadastro`:
 
-| Arquivo | Formato | Tamanho aproximado |
+| Arquivo | Formato | Tamanho |
 | --- | --- | --- |
-| `prumo-login.mp4` | H.264 sem áudio (fallback principal) | 1,0 MB |
-| `prumo-login.webm` | VP9 sem áudio | 0,9 MB |
-| `prumo-login-poster.webp` | WebP (poster e redução de movimento) | 71 KB |
+| `prumo-login.webm` | VP9, sem áudio | 930 KB |
+| `prumo-login.mp4` | H.264, sem áudio | 1,03 MB |
+| `prumo-login-poster.webp` | Poster WebP | 72 KB |
 
-Os arquivos devem ficar **nesta pasta** (`public/videos`) antes do merge. O pacote entregue na conversa é `prumo-login-assets-optimized.zip` e contém essa estrutura pronta para copiar.
+Os assets foram gerados a partir do vídeo enviado para o projeto. O WebM é a primeira fonte, seguido do MP4. A posterização do vídeo em caracteres ASCII é feita por `src/components/auth-video-ascii.tsx`, sem dependências novas.
 
-Sem os três assets, o painel usa a fotografia já existente (`public/images/prumo-forest.webp`) como fallback. A implementação do canvas ASCII e da coreografia não depende de novas bibliotecas.
+**Fallbacks:** enquanto o vídeo carrega, quando o autoplay é bloqueado ou não há codec compatível, o canvas amostra a imagem de poster. Se ela falhar, o componente tenta `/images/prumo-forest.webp`. Com movimento reduzido, a interface permanece estática e usa o poster.
 
-Padrões: autoPlay + muted + loop + playsInline, canvas em baixa resolução a ~11 FPS no desktop, interação somente com cursor fino, pausa quando a aba fica oculta e `prefers-reduced-motion` respeitado.
+**Performance:** somente um pequeno grid de pixels é lido a cada atualização; o loop para quando a aba fica oculta ou quando o painel sai da viewport. Os eventos de ponteiro não capturam cliques ou bloqueiam o formulário.

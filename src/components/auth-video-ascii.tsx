@@ -2,162 +2,236 @@
 
 import {useEffect, useRef} from 'react';
 
-const glyphs = ' .,:;i1tfLCG08@';
+const GLYPHS = ' .,:;i1tfLCG08@';
+const POSTER = '/videos/prumo-login-poster.webp';
+const FALLBACK = '/images/prumo-forest.webp';
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 /**
- * A lightweight, pointer-reactive ASCII treatment sampled from the playing video.
- * Only a tiny offscreen pixel grid is read (not full-resolution video frames).
+ * The actual footage is sampled to a small pixel grid and reconstructed with
+ * characters, rather than placing faint text over the original video.
+ * While loading (or when autoplay is blocked), the poster is ASCII-rendered too.
  */
 export function AuthVideoASCII() {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const root = rootRef.current;
+    const stage = stageRef.current;
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d', {alpha: true});
     const sample = document.createElement('canvas');
-    const sampleContext = sample.getContext('2d', {willReadFrequently: true});
-    if (!root || !video || !canvas || !context || !sampleContext) return;
+    const sampler = sample.getContext('2d', {willReadFrequently: true});
+    if (!stage || !video || !canvas || !context || !sampler) return;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const coarse = matchMedia('(pointer: coarse)');
+    const poster = new Image();
+    let posterReady = false;
+    let fallbackAttempted = false;
+    let disposed = false;
     let visible = true;
-    let raf = 0;
-    let previous = 0;
+    let frame = 0;
+    let lastPaint = 0;
     let width = 0;
     let height = 0;
-    let cellsAcross = 0;
-    let cellsDown = 0;
-    const pointer = {x: -1000, y: -1000, touched: 0};
+    let columns = 0;
+    let rows = 0;
+    let pixelRatio = 1;
+    const pointer = {x: -1000, y: -1000, movedAt: -10000};
 
     function resize() {
-      const bounds = root!.getBoundingClientRect();
-      width = Math.max(1, Math.round(bounds.width));
-      height = Math.max(1, Math.round(bounds.height));
-      const cell = coarse.matches ? 18 : 14;
-      cellsAcross = Math.max(1, Math.ceil(width / cell));
-      cellsDown = Math.max(1, Math.ceil(height / cell));
-      canvas!.width = width;
-      canvas!.height = height;
-      sample.width = cellsAcross;
-      sample.height = cellsDown;
+      const bounds = stage!.getBoundingClientRect();
+      const nextWidth = Math.max(1, Math.round(bounds.width));
+      const nextHeight = Math.max(1, Math.round(bounds.height));
+      if (nextWidth === width && nextHeight === height) return;
+      width = nextWidth;
+      height = nextHeight;
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas!.width = Math.round(width * pixelRatio);
+      canvas!.height = Math.round(height * pixelRatio);
+      context!.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      const cell = coarse.matches ? 17 : 13;
+      columns = Math.max(1, Math.ceil(width / cell));
+      rows = Math.max(1, Math.ceil(height / cell));
+      sample.width = columns;
+      sample.height = rows;
+      draw(performance.now());
     }
 
     function draw(now: number) {
-      raf = 0;
-      if (reduced.matches || document.hidden || !visible || video!.readyState < 2) return;
-      if (now - previous >= (coarse.matches ? 145 : 88)) {
-        previous = now;
-        const vw = video!.videoWidth, vh = video!.videoHeight;
-        if (vw > 0 && vh > 0 && width > 0 && height > 0) {
-          // Replicate object-fit: cover so the glyphs match the cropped footage.
-          const ratio = width / height;
-          const cropWidth = Math.min(vw, vh * ratio);
-          const cropHeight = Math.min(vh, vw / ratio);
-          const cropX = (vw - cropWidth) / 2;
-          const cropY = (vh - cropHeight) / 2;
-          try {
-            sampleContext!.drawImage(video!, cropX, cropY, cropWidth, cropHeight, 0, 0, cellsAcross, cellsDown);
-            const pixels = sampleContext!.getImageData(0, 0, cellsAcross, cellsDown).data;
-            context!.clearRect(0, 0, width, height);
-            const cellWidth = width / cellsAcross;
-            const cellHeight = height / cellsDown;
-            context!.font = '500 ' + Math.max(10, cellHeight * .84) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
-            context!.textAlign = 'center';
-            context!.textBaseline = 'middle';
-            const pointerFresh = now - pointer.touched < 1500;
-            for (let row = 0; row < cellsDown; row++) {
-              for (let col = 0; col < cellsAcross; col++) {
-                const index = (row * cellsAcross + col) * 4;
-                const light = (pixels[index] * .22 + pixels[index + 1] * .68 + pixels[index + 2] * .10) / 255;
-                const x = (col + .5) * cellWidth, y = (row + .5) * cellHeight;
-                const radius = coarse.matches ? 0 : 145;
-                const proximity = pointerFresh && radius > 0 ?
-                  Math.max(0, 1 - Math.hypot(x - pointer.x, y - pointer.y) / radius) : 0;
-                const seed = (col * 13 + row * 7) % 17;
-                const flicker = proximity * Math.sin(now * .012 + seed) * 2;
-                const glyph = glyphs[Math.max(0, Math.min(glyphs.length - 1,
-                  Math.floor(light * (glyphs.length - 1) + flicker)))];
-                if (glyph === ' ') continue;
-                const alpha = Math.min(.87, .16 + light * .32 + proximity * .48);
-                context!.fillStyle = 'rgba(178, 225, 189, ' + alpha + ')';
-                context!.fillText(glyph, x, y);
-              }
-            }
-          } catch {
-            // Unreadable or unsupported video frames: retain the poster fallback.
-            context!.clearRect(0, 0, width, height);
+      if (width <= 1 || height <= 1 || columns === 0) return;
+      const live = !reduced.matches && video!.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        !video!.paused && video!.videoWidth > 0;
+      const source: HTMLVideoElement | HTMLImageElement | null =
+        live ? video! : posterReady ? poster : null;
+
+      if (!source) return;
+      const sourceWidth = live ? video!.videoWidth : poster.naturalWidth;
+      const sourceHeight = live ? video!.videoHeight : poster.naturalHeight;
+      if (!sourceWidth || !sourceHeight) return;
+
+      const ratio = width / height;
+      const cropWidth = Math.min(sourceWidth, sourceHeight * ratio);
+      const cropHeight = Math.min(sourceHeight, sourceWidth / ratio);
+      const xOffset = (sourceWidth - cropWidth) / 2;
+      const yOffset = (sourceHeight - cropHeight) * 0.45;
+
+      try {
+        sampler!.drawImage(source, xOffset, yOffset, cropWidth, cropHeight, 0, 0, columns, rows);
+        const rgba = sampler!.getImageData(0, 0, columns, rows).data;
+
+        // The forest is dark: local normalization avoids a field of invisible dots.
+        let min = 255, max = 0;
+        const lightness = new Float32Array(columns * rows);
+        for (let i = 0; i < lightness.length; i++) {
+          const offset = i * 4;
+          const luminance = rgba[offset] * 0.22 + rgba[offset + 1] * 0.68 + rgba[offset + 2] * 0.10;
+          lightness[i] = luminance;
+          min = Math.min(min, luminance);
+          max = Math.max(max, luminance);
+        }
+        const low = min + (max - min) * 0.09;
+        const range = Math.max(24, (max - min) * 0.77);
+        const cellWidth = width / columns;
+        const cellHeight = height / rows;
+        const pointerFresh = !coarse.matches && now - pointer.movedAt < 1700;
+
+        context!.clearRect(0, 0, width, height);
+        // Opaque-enough dark ink makes ASCII readable over moving footage.
+        context!.fillStyle = 'rgba(2, 8, 4, 0.60)';
+        context!.fillRect(0, 0, width, height);
+        context!.font = '500 ' + Math.max(10, Math.min(15, cellHeight * 0.9)) +
+          'px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+        context!.textAlign = 'center';
+        context!.textBaseline = 'middle';
+
+        for (let row = 0; row < rows; row++) {
+          for (let column = 0; column < columns; column++) {
+            const index = row * columns + column;
+            const x = (column + 0.5) * cellWidth;
+            const y = (row + 0.5) * cellHeight;
+            const distance = pointerFresh ? Math.hypot(x - pointer.x, y - pointer.y) : 1000;
+            const influence = clamp(1 - distance / 165, 0, 1);
+            const normalized = clamp((lightness[index] - low) / range, 0, 1);
+            const tone = Math.pow(normalized, 0.75);
+            const shimmer = influence * (Math.sin(now * .015 + column * 1.79 + row * .51) * 2.4);
+            const glyphIndex = clamp(
+              Math.round(tone * (GLYPHS.length - 1) + shimmer),
+              0,
+              GLYPHS.length - 1
+            );
+            const glyph = GLYPHS[glyphIndex];
+            if (glyph === ' ') continue;
+            const opacity = clamp(0.37 + tone * 0.55 + influence * 0.42, 0, 1);
+            const red = Math.round(153 + influence * 48);
+            const green = Math.round(194 + influence * 43);
+            const blue = Math.round(160 + influence * 50);
+            context!.fillStyle = 'rgba(' + red + ',' + green + ',' + blue + ',' + opacity.toFixed(3) + ')';
+            context!.fillText(glyph, x, y);
           }
         }
+      } catch {
+        // A failed video decode still leaves a CSS poster behind the canvas.
+        context!.clearRect(0, 0, width, height);
       }
-      raf = requestAnimationFrame(draw);
+    }
+
+    function tick(now: number) {
+      frame = 0;
+      if (disposed || !visible || document.hidden || reduced.matches) return;
+      if (now - lastPaint >= (coarse.matches ? 125 : 80)) {
+        lastPaint = now;
+        draw(now);
+      }
+      frame = requestAnimationFrame(tick);
     }
 
     function sync() {
-      cancelAnimationFrame(raf);
-      raf = 0;
-      if (reduced.matches || document.hidden || !visible) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (disposed) return;
+      if (reduced.matches || !visible || document.hidden) {
         video!.pause();
-        context!.clearRect(0, 0, width, height);
+        if (reduced.matches) draw(performance.now());
         return;
       }
-      void video!.play().catch(() => {/* Autoplay may be blocked; keep the poster. */});
-      if (video!.readyState >= 2) raf = requestAnimationFrame(draw);
+      // Play is best effort. The poster remains an ASCII fallback on rejection.
+      void video!.play().catch(() => { if (!disposed) draw(performance.now()); });
+      lastPaint = 0;
+      frame = requestAnimationFrame(tick);
     }
 
-    function move(event: PointerEvent) {
+    function onPointerMove(event: PointerEvent) {
       if (coarse.matches || reduced.matches) return;
-      const bounds = root!.getBoundingClientRect();
+      const bounds = stage!.getBoundingClientRect();
       pointer.x = event.clientX - bounds.left;
       pointer.y = event.clientY - bounds.top;
-      pointer.touched = performance.now();
-      root!.style.setProperty('--portal-pointer-x', pointer.x + 'px');
-      root!.style.setProperty('--portal-pointer-y', pointer.y + 'px');
+      pointer.movedAt = performance.now();
+      stage!.style.setProperty('--portal-pointer-x', pointer.x + 'px');
+      stage!.style.setProperty('--portal-pointer-y', pointer.y + 'px');
     }
-    function leave() {
-      pointer.touched = 0;
-      pointer.x = -1000;
-      pointer.y = -1000;
-      root!.style.removeProperty('--portal-pointer-x');
-      root!.style.removeProperty('--portal-pointer-y');
+    function onPointerLeave() {
+      pointer.movedAt = -10000;
+      stage!.style.removeProperty('--portal-pointer-x');
+      stage!.style.removeProperty('--portal-pointer-y');
     }
-    function onMotion() { sync(); }
 
-    const sizes = new ResizeObserver(resize);
+    poster.onload = () => {
+      if (disposed) return;
+      posterReady = true;
+      draw(performance.now());
+    };
+    poster.onerror = () => {
+      if (disposed || fallbackAttempted) return;
+      fallbackAttempted = true;
+      poster.src = FALLBACK;
+    };
+    poster.decoding = 'async';
+    poster.src = POSTER;
+
+    const observer = new ResizeObserver(resize);
     const intersection = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       sync();
     }, {threshold: 0.01});
-    sizes.observe(root);
-    intersection.observe(root);
+    observer.observe(stage);
+    intersection.observe(stage);
     resize();
-    video.addEventListener('loadeddata', sync);
-    root.addEventListener('pointermove', move, {passive: true});
-    root.addEventListener('pointerleave', leave);
+
+    const onFrameReady = () => draw(performance.now());
+    video.addEventListener('loadeddata', onFrameReady);
+    video.addEventListener('playing', onFrameReady);
+    stage.addEventListener('pointermove', onPointerMove, {passive: true});
+    stage.addEventListener('pointerleave', onPointerLeave);
     document.addEventListener('visibilitychange', sync);
-    reduced.addEventListener('change', onMotion);
+    reduced.addEventListener('change', sync);
     sync();
 
     return () => {
-      cancelAnimationFrame(raf);
+      disposed = true;
+      cancelAnimationFrame(frame);
       video.pause();
-      sizes.disconnect();
+      observer.disconnect();
       intersection.disconnect();
-      video.removeEventListener('loadeddata', sync);
-      root.removeEventListener('pointermove', move);
-      root.removeEventListener('pointerleave', leave);
+      video.removeEventListener('loadeddata', onFrameReady);
+      video.removeEventListener('playing', onFrameReady);
+      stage.removeEventListener('pointermove', onPointerMove);
+      stage.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', sync);
-      reduced.removeEventListener('change', onMotion);
-      leave();
+      reduced.removeEventListener('change', sync);
+      poster.onload = null;
+      poster.onerror = null;
+      onPointerLeave();
     };
   }, []);
 
-  return <div className="portal-video-stage" ref={rootRef}>
+  return <div className="portal-video-stage" ref={stageRef}>
     <video ref={videoRef} className="portal-video" autoPlay muted loop playsInline
-      preload="metadata" poster="/videos/prumo-login-poster.webp" aria-hidden="true" tabIndex={-1}>
+      preload="metadata" poster={POSTER} aria-hidden="true" tabIndex={-1}>
       <source src="/videos/prumo-login.webm" type="video/webm" />
       <source src="/videos/prumo-login.mp4" type="video/mp4" />
     </video>
