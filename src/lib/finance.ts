@@ -23,7 +23,17 @@ export function filterFinanceSpace(data: FinanceData, space: string): FinanceDat
 }
 export const emptyData:FinanceData = {version:1,name:'',accounts:[],transactions:[],goals:[],budgets:[]};
 export const money=(cents:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
-export function toCents(value:string){if(!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim()))throw new Error('Informe um valor positivo, como 125,50.');const n=Math.round(Number(value.replace(',','.'))*100);if(!Number.isSafeInteger(n)||n<=0)throw new Error('Informe um valor válido maior que zero.');return n;}
+/** Accept standard pt-BR grouping, plain decimals and pasted R$ values without rounding ambiguity. */
+export function toCents(value:string){
+ const raw=value.trim().replace(/^R\$\s*/,'').trim();
+ const grouped=/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(raw);
+ const plain=/^\d+(?:[.,]\d{1,2})?$/.test(raw);
+ if(!grouped&&!plain)throw new Error('Informe um valor válido, como 125,50 ou 1.234,56.');
+ const normalized=grouped?raw.replace(/\./g,'').replace(',','.'):raw.replace(',','.');
+ const n=Math.round(Number(normalized)*100);
+ if(!Number.isSafeInteger(n)||n<=0)throw new Error('Informe um valor válido maior que zero.');
+ return n;
+}
 export function summary(data:FinanceData,month:string){const paid=data.transactions.filter(t=>t.status==='paid');const current=data.transactions.filter(t=>t.date.startsWith(month));const total=(list:Transaction[],type:string)=>list.filter(t=>t.type===type).reduce((s,t)=>s+t.amount,0);const balance=data.accounts.reduce((s,a)=>s+a.openingBalance,0)+total(paid,'income')-total(paid,'expense');const pending=total(current.filter(t=>t.status==='pending'),'expense')+creditInvoices(data).filter(i=>!i.payment&&i.dueOn.startsWith(month)).reduce((sum,i)=>sum+i.amount,0);const reserved=data.goals.reduce((s,g)=>s+g.saved,0);return {balance,income:total(current.filter(t=>t.status==='paid'),'income'),expense:total(current.filter(t=>t.status==='paid'),'expense'),pending,reserved,available:balance-pending-reserved};}
 /**
  * The actual amount free to spend today, independent of a selected reporting
