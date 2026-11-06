@@ -4,8 +4,9 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import {ArrowUpRight, CreditCard as CardIcon, Pencil, Plus, Trash2, X} from 'lucide-react';
 import {addCreditPurchase, cardColors, creditInvoices, invoiceKey, isCardColor, payCreditInvoice, type CreditCard, type CreditInvoice, type CreditInvoiceRef, type CreditPurchase} from '@/lib/credit';
-import {categories, isFinanceData, toCents, validDate, type FinanceData} from '@/lib/finance';
+import {isFinanceData, toCents, validDate, type FinanceData} from '@/lib/finance';
 import {AppSelect, DateField} from './form-controls';
+import {categoryCatalog} from '@/lib/category-settings';
 import {useConfirm} from './confirmation-provider';
 
 const shortDate = (date: string) => date.split('-').reverse().slice(0, 2).join('/');
@@ -260,7 +261,7 @@ export function CreditWallet({data, today, format, initialInvoice, onChange, onA
               <label>Data da compra<DateField name="date" required defaultValue={editingPurchase?.date ?? today} /></label>
               <label>Número de parcelas<input name="installments" type="number" min="1" max="60" required defaultValue={editingPurchase?.installments ?? 1} disabled={Boolean(editingPurchase?.statementCycle)} /></label>
             </div>
-            <label>Categoria<AppSelect name="category" defaultValue={editingPurchase?.category ?? 'Outros'}>{categories.map(category => <option key={category}>{category}</option>)}</AppSelect></label>
+            <label>Categoria<AppSelect name="category" defaultValue={editingPurchase?.category ?? 'Outros'}>{categoryCatalog(data).map(category => <option key={category}>{category}</option>)}</AppSelect></label>
           </>}
           {editor?.kind === 'payment' && <>
             <p>Valor da fatura <strong>{format(editor.invoice.amount)}</strong></p>
