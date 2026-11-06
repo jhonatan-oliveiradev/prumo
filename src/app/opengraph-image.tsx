@@ -60,12 +60,17 @@ export default function OpenGraphImage() {
           whiteSpace: 'pre',
         }}>{line}</div>)}
       </div>
-      <div style={{
-        position: 'absolute', right: 205, top: 282, display: 'flex',
-        width: 180, height: 70, alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'monospace', fontSize: 76, letterSpacing: -12,
-        color: '#D9EBD8', opacity: 0.72,
-      }}>/ 01</div>
+      <svg
+        width="190" height="190" viewBox="0 0 190 190"
+        style={{position: 'absolute', top: 218, right: 171, opacity: 0.72}}
+        aria-hidden="true"
+      >
+        <circle cx="95" cy="95" r="65" fill="none" stroke="#A6CAA9" strokeWidth="1.5"/>
+        <circle cx="95" cy="95" r="40" fill="none" stroke="#A6CAA9" strokeWidth="1.5" opacity="0.6"/>
+        <path d="M95 4V54 M95 136V186 M4 95H54 M136 95H186"
+          fill="none" stroke="#A6CAA9" strokeWidth="1.5"/>
+        <circle cx="95" cy="95" r="7" fill="#B8E5A1"/>
+      </svg>
       <div style={{
         position: 'absolute', right: 57, top: 58, display: 'flex',
         fontSize: 11, fontFamily: 'monospace',
@@ -109,7 +114,7 @@ export default function OpenGraphImage() {
           letterSpacing: 1.2,
         }}>
           <div style={{display: 'flex'}}>MAIS CLAREZA. MENOS COMPLICAÇÃO.</div>
-          <div style={{display: 'flex'}}>PRUMO / 2026</div>
+          <div style={{display: 'flex'}}>PRUMO / FINANÇAS</div>
         </div>
       </div>
     </div>,
