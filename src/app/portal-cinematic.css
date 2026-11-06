@@ -1,0 +1,342 @@
+/* No global splash over the auth intro: the hero field is the first frame. */
+html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
+
+/*
+ * Auth cinematic sequence
+ * 00:00 atmosphere / 00:38 shell / 00:75 video sweep
+ * 01:65 heading / 02:00 sequential controls
+ * Only login and signup opt in. Recovery routes stay untouched.
+ */
+.prumo-portal--cinematic {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  --portal-cinematic-ease: cubic-bezier(.16, 1, .3, 1);
+  --portal-cinematic-bounce: cubic-bezier(.24, 1.17, .3, 1);
+  padding-block: clamp(16px, 2.3vh, 30px);
+  background: #030504;
+}
+.prumo-portal--cinematic .portal-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 45%, #213b2a50, #030504 75%);
+  animation: cinematic-atmosphere-in 680ms ease-out both;
+}
+.prumo-portal--cinematic .portal-atmosphere > .gradient-ascii-container,
+.prumo-portal--cinematic .portal-atmosphere .gradient-ascii-canvas {
+  width: 100%;
+  height: 100%;
+}
+.prumo-portal--cinematic .portal-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, #03050420 0%, #0305049c 75%),
+    linear-gradient(0deg, #030504e8 0%, #03050419 43%, #0305048c 100%);
+}
+.prumo-portal--cinematic .portal-header {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  animation: cinematic-heading-rise 720ms var(--portal-cinematic-ease) 520ms both;
+}
+.prumo-portal--cinematic .portal-layout {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;
+  width: min(100%, 1280px);
+  height: min(750px, calc(100dvh - 125px));
+  min-height: min(590px, calc(100dvh - 110px));
+  max-height: calc(100dvh - 105px);
+  margin-block: auto;
+  overflow: hidden;
+  grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
+  background: #070b08;
+  border: 1px solid #354638;
+  box-shadow: 0 24px 105px #00000080, 0 1px 0 #a4d5b315 inset;
+  animation: cinematic-frame-assemble 620ms var(--portal-cinematic-ease) 380ms both;
+}
+.prumo-portal--cinematic .portal-layout::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px #bcdeb008;
+}
+.prumo-portal--cinematic .portal-content {
+  align-self: center;
+  justify-self: center;
+  max-height: 100%;
+  width: min(100%, 550px);
+  padding: clamp(22px, 3.1vw, 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #334738 transparent;
+}
+.prumo-portal--cinematic .portal-auth-heading {
+  animation: cinematic-heading-rise 740ms var(--portal-cinematic-ease) 1650ms both;
+}
+.prumo-portal--cinematic .portal-social {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2000ms both;
+}
+.prumo-portal--cinematic .portal-divider {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2090ms both;
+}
+.prumo-portal--cinematic .portal-auth-form {
+  animation: none;
+}
+.prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(1) {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2190ms both;
+}
+.prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(2) {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2270ms both;
+}
+.prumo-portal--cinematic .portal-auth-form > .portal-field:nth-child(3) {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2350ms both;
+}
+.prumo-portal--cinematic .portal-auth-form > .portal-submit {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2440ms both;
+}
+.prumo-portal--cinematic .portal-unavailable {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2140ms both;
+}
+.prumo-portal--cinematic .portal-actions {
+  animation: cinematic-control-settle 620ms var(--portal-cinematic-bounce) 2520ms both;
+}
+.prumo-portal--cinematic .portal-art {
+  position: relative;
+  background: #09130d;
+  animation: none;
+  isolation: isolate;
+  overflow: hidden;
+}
+.prumo-portal--cinematic .portal-art::before {
+  z-index: 0;
+  opacity: .3;
+}
+.prumo-portal--cinematic .portal-art::after {
+  z-index: 2;
+  background: linear-gradient(180deg, #050b0660, transparent 28%, #03050480);
+}
+.prumo-portal--cinematic .portal-art-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(140deg, #07150b55, #050b0580),
+    url('/videos/prumo-login-poster.webp') center / cover,
+    url('/images/prumo-forest.webp') center / cover;
+  clip-path: inset(0 0 0 100%);
+  animation: cinematic-video-reveal 1000ms var(--portal-cinematic-ease) 790ms both;
+}
+.prumo-portal--cinematic .portal-sweep-beam {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 2px;
+  opacity: 0;
+  pointer-events: none;
+  background: #badbc1;
+  box-shadow: 0 0 14px 5px #91b59c4d, 0 0 48px 13px #91b59c12;
+  animation: cinematic-sweep-beam 1000ms var(--portal-cinematic-ease) 790ms both;
+}
+.prumo-portal--cinematic .portal-art::selection { background: transparent; }
+.prumo-portal--cinematic .portal-art .portal-art-kicker {
+  z-index: 4;
+  top: 22px;
+  left: 24px;
+  color: #c1e0c9;
+  text-shadow: 0 2px 8px #000a;
+  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 1850ms both;
+}
+.prumo-portal--cinematic .portal-art-cross {
+  z-index: 3;
+  opacity: .28;
+  width: min(49%, 340px);
+  border-color: #bbdfc650;
+  box-shadow: 0 0 0 24px #c9e9cf10, 0 0 0 48px #c9e9cf06;
+  animation: cinematic-orbit-breathe 11s ease-in-out 1900ms infinite alternate;
+}
+.prumo-portal--cinematic .portal-art-code {
+  z-index: 4;
+  font-size: clamp(43px, 5.5vw, 84px);
+  opacity: .62;
+  text-shadow: 0 3px 25px #030504bb;
+  animation: cinematic-heading-rise 700ms var(--portal-cinematic-ease) 1850ms both;
+}
+.prumo-portal--cinematic .portal-art-caption {
+  z-index: 4;
+  text-shadow: 0 2px 9px #000d;
+  animation: cinematic-heading-rise 650ms var(--portal-cinematic-ease) 1970ms both;
+}
+.prumo-portal--cinematic .portal-art::marker { color: transparent; }
+.prumo-portal--cinematic .portal-art-reveal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(90deg, #0c1e1085, transparent 20%, transparent 70%, #02060372);
+}
+.prumo-portal--cinematic .portal-art-reveal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(0deg, #0305044a, transparent 48%, #03050448);
+}
+.prumo-portal--cinematic .portal-video-stage {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  --portal-pointer-x: -500px;
+  --portal-pointer-y: -500px;
+  background:
+    linear-gradient(130deg, #0a1a0a65, #0305044d),
+    url('/videos/prumo-login-poster.webp') center / cover,
+    url('/images/prumo-forest.webp') center / cover;
+}
+.prumo-portal--cinematic .portal-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 45%;
+  filter: contrast(1.08) brightness(.65) saturate(.72);
+}
+.prumo-portal--cinematic .portal-video-ascii {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: .86;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.prumo-portal--cinematic .portal-video-pointer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse 160px 160px at var(--portal-pointer-x) var(--portal-pointer-y), #a2d0a820, transparent 80%);
+  mix-blend-mode: screen;
+}
+.prumo-portal--cinematic .portal-video-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: .48;
+  background-image: radial-gradient(#c6e2cd48 .65px, transparent .85px);
+  background-size: 20px 20px;
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 80%, transparent);
+}
+@keyframes cinematic-atmosphere-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cinematic-frame-assemble {
+  from { opacity: 0; transform: translateY(12px) scale(.982); filter: brightness(.63); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+@keyframes cinematic-video-reveal {
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes cinematic-sweep-beam {
+  0% { left: 100%; opacity: 0; }
+  12% { opacity: .85; }
+  89% { opacity: .75; }
+  100% { left: 0; opacity: 0; }
+}
+@keyframes cinematic-heading-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cinematic-control-settle {
+  0% { opacity: 0; transform: translateX(21px); }
+  68% { opacity: 1; transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes cinematic-orbit-breathe {
+  from { transform: scale(.98); }
+  to { transform: scale(1.025); }
+}
+
+/* Short screens can scroll their form independently without hiding the CTA. */
+@media (max-height: 710px) and (min-width: 761px) {
+  .prumo-portal--cinematic .portal-layout {
+    min-height: 0;
+    max-height: calc(100dvh - 94px);
+    height: calc(100dvh - 94px);
+  }
+  .prumo-portal--cinematic .portal-content { padding-block: 22px; }
+  .prumo-portal--cinematic .portal-auth-heading h1 { font-size: clamp(31px, 3vw, 45px); }
+  .prumo-portal--cinematic .portal-social { margin-top: 17px; }
+}
+/* Mobile preserves the sequence but the page itself scrolls. */
+@media (max-width: 760px) {
+  .prumo-portal--cinematic {
+    min-height: 100dvh;
+    overflow: clip;
+    padding: 16px;
+  }
+  .prumo-portal--cinematic .portal-header { margin-bottom: 0; }
+  .prumo-portal--cinematic .portal-layout {
+    flex: 1 0 auto;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    margin-block: 18px 0;
+    grid-template-columns: 1fr;
+  }
+  .prumo-portal--cinematic .portal-content {
+    overflow: visible;
+    max-height: none;
+    padding: clamp(28px, 6vw, 42px) clamp(22px, 6vw, 40px);
+  }
+  .prumo-portal--cinematic .portal-art {
+    min-height: 240px;
+  }
+  .prumo-portal--cinematic .portal-art-cross { width: 135px; }
+  .prumo-portal--cinematic .portal-art-code { font-size: 54px; }
+  .prumo-portal--cinematic .portal-art .portal-art-kicker { top: 17px; left: 17px; }
+  .prumo-portal--cinematic .portal-art-caption { right: 15px; bottom: 12px; }
+}
+@media (max-width: 390px) {
+  .prumo-portal--cinematic { padding: 12px; }
+}
+/* Keyboard users should never have to wait for controls to become visible. */
+.prumo-portal--cinematic:focus-within .portal-layout,
+.prumo-portal--cinematic:focus-within .portal-header,
+.prumo-portal--cinematic:focus-within .portal-content > *,
+.prumo-portal--cinematic:focus-within .portal-auth-form > * {
+  animation: none !important;
+  opacity: 1;
+  transform: none;
+}
+.prumo-portal--cinematic:focus-within .portal-art-reveal { clip-path: none; }
+/* No choreography or video motion when the user requests reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .prumo-portal--cinematic .portal-atmosphere { display: none; }
+  .prumo-portal--cinematic .portal-layout { opacity: 1; filter: none; }
+  .prumo-portal--cinematic .portal-art-reveal { clip-path: none !important; }
+  .prumo-portal--cinematic .portal-video { visibility: hidden; }
+  .prumo-portal--cinematic .portal-video-ascii,
+  .prumo-portal--cinematic .portal-video-pointer { display: none; }
+}
