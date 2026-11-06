@@ -79,7 +79,9 @@ export function inspectCsv(text: string): CsvInspection {
   const clean = text.replace(/^\uFEFF/, '');
   let candidate: {delimiter: string; parsed: ReturnType<typeof records>; indices: number[]; score: number} | undefined;
   for (const delimiter of [';', ',', '\t']) {
-    const parsed = records(clean, delimiter);
+    let parsed: ReturnType<typeof records>;
+    try {parsed = records(clean, delimiter);}
+    catch {continue;} // Quotes valid for one delimiter can look malformed for another.
     const headers = parsed[0]?.cells ?? [];
     if (headers.length < 3) continue;
     const normalizedHeaders = headers.map(normalized);
