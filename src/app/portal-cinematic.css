@@ -1,3 +1,6 @@
+/* No global splash over the auth intro: the hero field is the first frame. */
+html.prumo-boot:has(.prumo-portal--cinematic) .prumo-launch { display: none; }
+
 /*
  * Auth cinematic sequence
  * 00:00 atmosphere / 00:38 shell / 00:75 video sweep
@@ -133,6 +136,19 @@
   clip-path: inset(0 0 0 100%);
   animation: cinematic-video-reveal 1000ms var(--portal-cinematic-ease) 790ms both;
 }
+.prumo-portal--cinematic .portal-sweep-beam {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 2px;
+  opacity: 0;
+  pointer-events: none;
+  background: #badbc1;
+  box-shadow: 0 0 14px 5px #91b59c4d, 0 0 48px 13px #91b59c12;
+  animation: cinematic-sweep-beam 1000ms var(--portal-cinematic-ease) 790ms both;
+}
 .prumo-portal--cinematic .portal-art::selection { background: transparent; }
 .prumo-portal--cinematic .portal-art .portal-art-kicker {
   z-index: 4;
@@ -238,6 +254,12 @@
 @keyframes cinematic-video-reveal {
   from { clip-path: inset(0 0 0 100%); }
   to { clip-path: inset(0 0 0 0); }
+}
+@keyframes cinematic-sweep-beam {
+  0% { left: 100%; opacity: 0; }
+  12% { opacity: .85; }
+  89% { opacity: .75; }
+  100% { left: 0; opacity: 0; }
 }
 @keyframes cinematic-heading-rise {
   from { opacity: 0; transform: translateY(20px); }
