@@ -33,6 +33,7 @@ test('sign-up handles existing accounts and invalid passwords without leaking ra
 });
 test('network and unconfirmed session errors have different explanations',()=>{
  assert.equal(authNetworkFailure().category,'network');
+ assert.equal(describeAuthFailure({status:0,code:'FETCH_ERROR'},'signin').category,'network');
  assert.equal(authSessionFailure().reference,'AUTH_SESSION');
  assert.notEqual(authNetworkFailure().title,authSessionFailure().title);
 });
