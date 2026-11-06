@@ -42,6 +42,9 @@ export function describeAuthFailure(error:AuthResponseError,attempt:AuthAttempt)
   const code=(error.code??'').trim().toUpperCase();
   const status=Number(error.status)||0;
 
+  if(status===0 && (!code || ['FETCH_ERROR','NETWORK_ERROR','TIMEOUT','REQUEST_TIMEOUT'].includes(code)))
+    return authNetworkFailure();
+
   if(status===429||code==='TOO_MANY_REQUESTS'||code==='RATE_LIMIT_EXCEEDED')
     return explain('rate-limit','Muitas tentativas de acesso',
       'Por segurança, novas tentativas foram limitadas temporariamente. Aguarde alguns minutos antes de tentar novamente.',
