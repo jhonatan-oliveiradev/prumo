@@ -47,3 +47,39 @@
   .app .transaction small { font-size:11px; }
   .app .transaction b { font-size:12px; }
 }
+
+/* Report bars are navigable summaries. The destination keeps month and scope. */
+.app .report-drilldown {
+  width:100%;
+  color:var(--ink);
+  text-align:left;
+  font:inherit;
+  background:transparent;
+  cursor:pointer;
+  transition:background-color 180ms ease,color 180ms ease;
+}
+.app .report-drilldown:hover { background:var(--surface-secondary); }
+.app .report-drilldown:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:6px; }
+.app .report-drilldown > svg { flex:none; color:var(--muted); transition:transform 180ms ease; }
+.app .report-drilldown:hover > svg { transform:translate(2px,-2px); color:var(--ink); }
+/* Filters are visible, reversible and grow gracefully across screen widths. */
+.app .filters { flex-wrap:wrap; gap:10px; }
+.app .filters .search { min-width:min(100%,225px); }
+.app .filters > .select-trigger { flex:1 1 160px; min-width:145px; max-width:280px; }
+.app .active-filters {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:8px 0;
+  padding:9px 13px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--surface-secondary);
+  color:var(--muted);
+  font-size:12px;
+}
+@media(max-width:640px) {
+ .app .filters > .select-trigger,.app .filters .search { max-width:none; width:100%; }
+}
+@media(prefers-reduced-motion:reduce) { .app .report-drilldown > svg {transition:none;} }
