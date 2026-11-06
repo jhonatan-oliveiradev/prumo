@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react';
 import '@/app/portal.css';
+import '@/app/portal-cinematic.css';
 import {AuthBackdrop} from './auth-backdrop';
 import {AuthVideoASCII} from './auth-video-ascii';
 
