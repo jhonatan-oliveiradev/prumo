@@ -42,6 +42,7 @@ export function renameCategory(data:FinanceData,previous:string,rawName:string):
   transactions:data.transactions.map(row=>row.category===previous?{...row,category:name}:row),
   budgets:data.budgets.map(row=>row.category===previous?{...row,category:name}:row),
   recurringRules:data.recurringRules?.map(row=>row.category===previous?{...row,category:name}:row),
+  categoryRules:data.categoryRules?.map(row=>row.category===previous?{...row,category:name}:row),
   creditPurchases:data.creditPurchases?.map(row=>row.category===previous?{...row,category:name}:row),
  };
  if(!validCustomCategories(next.customCategories))throw Error('Já existe uma categoria com esse nome ou o nome é inválido.');
@@ -54,6 +55,7 @@ export function categoryUsage(data:FinanceData,name:string){
   purchases:(data.creditPurchases??[]).filter(row=>row.category===name).length,
   budgets:data.budgets.filter(row=>row.category===name).length,
   recurrences:(data.recurringRules??[]).filter(row=>row.category===name).length,
+  rules:(data.categoryRules??[]).filter(rule=>rule.category===name).length,
  };
 }
 

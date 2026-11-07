@@ -153,7 +153,7 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
           {preview ? <>
             <div className="csv-summary" role="status">
               <strong>{preview.destination}{preview.target.kind === 'card' && ' · Fechamento ' + preview.target.cycle.split('-').reverse().join('/')}</strong>
-              <span>{selected.size} de {preview.rows.length} selecionados · {blockedRows} bloqueados</span>
+              <span>{selected.size} de {preview.rows.length} selecionados · {blockedRows} bloqueados · {preview.rows.filter(row=>selected.has(row.key)&&row.suggestedCategory).length} categorizados por regra</span>
             </div>
             <div className="csv-review-metrics" aria-label="Resumo do lote selecionado">
               <span><small>{card ? 'Compras a importar' : 'Saídas'}</small><strong>{money(spendingTotal)}</strong></span>
@@ -180,7 +180,7 @@ export function CsvImportDialog({kind, data, month, space, onChange, onClose, re
                     return next;
                   });
                 }} />
-                <span><strong>{row.description}</strong><small>{dateLabel(row.date)}{row.issue && ' · ' + row.issue}</small></span>
+                <span><strong>{row.description}</strong><small>{dateLabel(row.date)}{row.issue && ' · ' + row.issue}{row.suggestedCategory && ' · Categoria sugerida: ' + row.suggestedCategory}</small></span>
                 <span className="csv-amount">{money(row.amount)}</span>
               </label></li>)}
             </ul> : <p className="muted">O arquivo não tem lançamentos válidos.</p>}

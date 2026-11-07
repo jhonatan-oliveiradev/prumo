@@ -14,7 +14,7 @@ const categoryId=(workspace:string,type:string,name:string)=>entityId(workspace,
 const signedMovement=(kind:string,amount:bigint)=>['CONTRIBUTION','ADJUSTMENT_IN'].includes(kind)?amount:-amount;
 
 export async function readWorkspace(userId:string){
- const workspace=await prisma.workspace.findFirst({where:{id:workspaceId(userId),members:{some:{user:{authSubject:userId}}}},include:{reconciliations:true,transfers:true,importBatches:{where:{source:csvSource}},creditCards:{include:{purchases:true}},accounts:true,categories:true,transactions:true,recurringRules:true,budgets:{include:{lines:{include:{category:true}}}},goals:{include:{movements:true}}}});
+ const workspace=await prisma.workspace.findFirst({where:{id:workspaceId(userId),members:{some:{user:{authSubject:userId}}}},include:{categoryRules:true,reconciliations:true,transfers:true,importBatches:{where:{source:csvSource}},creditCards:{include:{purchases:true}},accounts:true,categories:true,transactions:true,recurringRules:true,budgets:{include:{lines:{include:{category:true}}}},goals:{include:{movements:true}}}});
  if(!workspace||workspace.revision===0)return null;
  const batchPrefix=csvBatchPrefix(workspace.id);
  const batchDates=new Map(workspace.importBatches.map(batch=>[batch.id,batch.createdAt.toISOString()]));
@@ -59,7 +59,17 @@ export async function readWorkspace(userId:string){
   .filter(c=>!c.isArchived&&c.parentId===null&&c.id.startsWith(entityId(workspace.id,'category',''))
     &&!categories.includes(c.name)&&(c.type==='INCOME'||c.type==='EXPENSE'))
   .map(c=>c.name))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
- const data:FinanceData={customCategories,reconciliations,transfers,creditCards,creditPurchases,recurringRules:workspace.recurringRules.filter(r=>r.clientId&&r.interval!=='DAILY').map(r=>({id:r.clientId!,description:r.title,amount:Number(r.amountMinor),type:r.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===r.categoryId)?.name??'Outros',accountId:workspace.accounts.find(a=>a.id===r.accountId)!.clientId,space:r.space==='work'?'work':'personal',frequency:r.interval==='WEEKLY'?'weekly':r.interval==='YEARLY'?'yearly':'monthly',status:r.status==='ACTIVE'?'active':'paused',startsOn:r.startsOn.toISOString().slice(0,10),...(r.endsOn?{endsOn:r.endsOn.toISOString().slice(0,10)}:{}),...(r.generatedThroughOn?{generatedThrough:r.generatedThroughOn.toISOString().slice(0,10)}:{})})),version:1,name:workspace.displayName??'',accounts:workspace.accounts.filter(a=>!a.isArchived).map(a=>({id:a.clientId,name:a.name,openingBalance:Number(a.openingBalanceMinor)})),transactions:workspace.transactions.filter(t=>t.kind==='INCOME'||t.kind==='EXPENSE').filter(t=>t.status!=='VOID').map(t=>({...(t.importSource===csvSource?importFields(t.importBatchId,t.importExternalId):{}),...(t.creditCardId&&t.creditInvoiceCycle?{creditInvoice:{cardId:cardsById.get(t.creditCardId)!,cycle:t.creditInvoiceCycle}}:{}),...(t.recurringRuleId&&t.recurringScheduledOn?{recurrence:{ruleId:workspace.recurringRules.find(r=>r.id===t.recurringRuleId)!.clientId!,scheduledOn:t.recurringScheduledOn.toISOString().slice(0,10)}}:{}),...(t.installmentGroupId&&t.installmentNumber&&t.installmentCount?{installment:{groupId:t.installmentGroupId,number:t.installmentNumber,count:t.installmentCount}}:{}),id:t.clientId,description:t.title,amount:Number(t.amountMinor),type:t.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===t.categoryId)?.name??'Outros',date:t.occurredOn.toISOString().slice(0,10),accountId:workspace.accounts.find(a=>a.id===t.accountId)!.clientId,status:t.status==='CLEARED'?'paid':'pending',space:t.space==='work'?'work':'personal'})),budgets:workspace.budgets.filter(b=>b.status==='ACTIVE').flatMap(b=>b.lines.map(l=>({id:b.clientId,category:l.category.name,limit:Number(l.limitMinor)}))),goals:workspace.goals.filter(g=>g.status!=='ARCHIVED').map(g=>({id:g.clientId,name:g.name,target:Number(g.targetAmountMinor),...(isGoalCover(g.cover)?{cover:g.cover}:{}),...(g.featured?{featured:true}:{}),saved:Number(g.movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n))}))};
+ const rulePrefix=entityId(workspace.id,'category-rule','');
+ const categoryRules:NonNullable<FinanceData['categoryRules']>=workspace.categoryRules
+  .filter(r=>r.id.startsWith(rulePrefix))
+  .sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id))
+  .map(r=>({
+   id:r.id.slice(rulePrefix.length),phrase:r.phrase,category:r.categoryName,
+   type:r.direction==='INCOME'?'income':'expense',
+   space:r.scope==='personal'||r.scope==='work'?r.scope:'all',
+   enabled:r.enabled,
+  }));
+ const data:FinanceData={categoryRules,customCategories,reconciliations,transfers,creditCards,creditPurchases,recurringRules:workspace.recurringRules.filter(r=>r.clientId&&r.interval!=='DAILY').map(r=>({id:r.clientId!,description:r.title,amount:Number(r.amountMinor),type:r.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===r.categoryId)?.name??'Outros',accountId:workspace.accounts.find(a=>a.id===r.accountId)!.clientId,space:r.space==='work'?'work':'personal',frequency:r.interval==='WEEKLY'?'weekly':r.interval==='YEARLY'?'yearly':'monthly',status:r.status==='ACTIVE'?'active':'paused',startsOn:r.startsOn.toISOString().slice(0,10),...(r.endsOn?{endsOn:r.endsOn.toISOString().slice(0,10)}:{}),...(r.generatedThroughOn?{generatedThrough:r.generatedThroughOn.toISOString().slice(0,10)}:{})})),version:1,name:workspace.displayName??'',accounts:workspace.accounts.filter(a=>!a.isArchived).map(a=>({id:a.clientId,name:a.name,openingBalance:Number(a.openingBalanceMinor)})),transactions:workspace.transactions.filter(t=>t.kind==='INCOME'||t.kind==='EXPENSE').filter(t=>t.status!=='VOID').map(t=>({...(t.importSource===csvSource?importFields(t.importBatchId,t.importExternalId):{}),...(t.creditCardId&&t.creditInvoiceCycle?{creditInvoice:{cardId:cardsById.get(t.creditCardId)!,cycle:t.creditInvoiceCycle}}:{}),...(t.recurringRuleId&&t.recurringScheduledOn?{recurrence:{ruleId:workspace.recurringRules.find(r=>r.id===t.recurringRuleId)!.clientId!,scheduledOn:t.recurringScheduledOn.toISOString().slice(0,10)}}:{}),...(t.installmentGroupId&&t.installmentNumber&&t.installmentCount?{installment:{groupId:t.installmentGroupId,number:t.installmentNumber,count:t.installmentCount}}:{}),id:t.clientId,description:t.title,amount:Number(t.amountMinor),type:t.kind==='INCOME'?'income':'expense',category:workspace.categories.find(c=>c.id===t.categoryId)?.name??'Outros',date:t.occurredOn.toISOString().slice(0,10),accountId:workspace.accounts.find(a=>a.id===t.accountId)!.clientId,status:t.status==='CLEARED'?'paid':'pending',space:t.space==='work'?'work':'personal'})),budgets:workspace.budgets.filter(b=>b.status==='ACTIVE').flatMap(b=>b.lines.map(l=>({id:b.clientId,category:l.category.name,limit:Number(l.limitMinor)}))),goals:workspace.goals.filter(g=>g.status!=='ARCHIVED').map(g=>({id:g.clientId,name:g.name,target:Number(g.targetAmountMinor),...(isGoalCover(g.cover)?{cover:g.cover}:{}),...(g.featured?{featured:true}:{}),saved:Number(g.movements.reduce((sum,m)=>sum+signedMovement(m.kind,m.amountMinor),0n))}))};
  return {data,revision:workspace.revision,updatedAt:workspace.updatedAt.toISOString()};
 }
 
@@ -92,7 +102,21 @@ export async function writeWorkspace(user:{id:string;name:string},data:FinanceDa
      await tx.category.update({where:{id:category.id},data:{isArchived:true}});
    }
   }
-  for(const account of data.accounts){const aid=entityId(id,'account',account.id);await tx.account.upsert({where:{id:aid},create:{id:aid,workspaceId:id,clientId:account.id,name:account.name,openingBalanceMinor:BigInt(account.openingBalance)},update:{name:account.name,openingBalanceMinor:BigInt(account.openingBalance)}});}
+  if(data.categoryRules!==undefined){
+   const prefix=entityId(id,'category-rule','');
+   const ids=data.categoryRules.map(rule=>entityId(id,'category-rule',rule.id));
+   await tx.categoryRule.deleteMany({where:{workspaceId:id,id:{startsWith:prefix,notIn:ids}}});
+   for(const [priority,rule] of data.categoryRules.entries()){
+    const rid=entityId(id,'category-rule',rule.id);
+    const fields={
+     phrase:rule.phrase,categoryName:rule.category,
+     direction:rule.type==='income'?'INCOME' as const:'EXPENSE' as const,
+     scope:rule.space,enabled:rule.enabled,priority,
+    };
+    await tx.categoryRule.upsert({where:{id:rid},create:{id:rid,workspaceId:id,...fields},update:fields});
+   }
+  }
+    for(const account of data.accounts){const aid=entityId(id,'account',account.id);await tx.account.upsert({where:{id:aid},create:{id:aid,workspaceId:id,clientId:account.id,name:account.name,openingBalanceMinor:BigInt(account.openingBalance)},update:{name:account.name,openingBalanceMinor:BigInt(account.openingBalance)}});}
   // Atomic zero-sum records: deletions and upserts share the same workspace revision.
   // A legacy client without this field must never erase transfers created by a newer client.
   // Other transfer types in the domain are not owned by the Prumo local-first editor.

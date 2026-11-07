@@ -114,6 +114,7 @@ model Workspace {
   members            WorkspaceMember[]
   accounts           Account[]
   categories         Category[]
+  categoryRules      CategoryRule[]
   transactions       Transaction[]
   creditCards        CreditCard[]
   transfers          Transfer[]
@@ -163,6 +164,23 @@ model Account {
 
   @@unique([workspaceId, clientId])
   @@index([workspaceId, isArchived])
+}
+
+model CategoryRule {
+  id           String       @id
+  workspaceId  String
+  phrase       String
+  categoryName String
+  direction    CategoryType
+  scope        String       @default("all")
+  enabled      Boolean      @default(true)
+  priority     Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, priority])
 }
 
 model Category {

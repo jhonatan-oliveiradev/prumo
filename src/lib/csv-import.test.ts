@@ -119,3 +119,46 @@ test('alerta sobre transferência interna e saldo inicial sem bloquear decisões
  assert.equal(preview[1].blocked,false);
  assert.equal(preview[2].issue,undefined);
 });
+
+
+test('rules suggest categories for new bank entries and preserve historical classifications',async()=>{
+ const catalog:FinanceData={...data,
+  transactions:[{id:'prior',description:'Netflix antiga',type:'expense',amount:1990,date:'2026-10-01',category:'Lazer',accountId:'main',status:'paid',space:'personal'}],
+  categoryRules:[
+   {id:'netflix',phrase:'Netflix',category:'Assinaturas',type:'expense',space:'personal',enabled:true},
+   {id:'income',phrase:'Salário',category:'Trabalho',type:'income',space:'all',enabled:true},
+  ],
+ };
+ const csv='Data;Descrição;Valor\n06/11/2026;Netflix mensalidade;-39,90\n06/11/2026;Salário de novembro;4.500,00\n06/11/2026;Feira local;-70,00';
+ const rows=parseCsv(csv).rows;
+ const preview=await previewCsv(rows,catalog,bank);
+ assert.deepEqual(preview.map(row=>row.suggestedCategory??'Outros'),['Assinaturas','Trabalho','Outros']);
+ const saved=applyCsv(catalog,bank,preview,randomUUID(),timestamp,randomUUID);
+ assert.deepEqual(saved.transactions.slice(1).map(t=>t.category),['Assinaturas','Trabalho','Outros']);
+ assert.equal(saved.transactions[0].category,'Lazer');
+ assert.equal(catalog.transactions.length,1);
+});
+
+test('rules respect card space and never recategorize an already imported statement',async()=>{
+ const withRules:FinanceData={...data,categoryRules:[
+  {id:'streaming',phrase:'Netflix',category:'Assinaturas',type:'expense',space:'personal',enabled:true},
+  {id:'work',phrase:'Serviço',category:'Trabalho',type:'expense',space:'work',enabled:true},
+ ]};
+ const csv='Data;Descrição;Valor\n06/11/2026;Netflix;45,50\n06/11/2026;Serviço hospedagem;120,00';
+ const preview=await previewCsv(parseCsv(csv).rows,withRules,card);
+ assert.deepEqual(preview.map(r=>r.suggestedCategory??'Outros'),['Assinaturas','Outros']);
+ const saved=applyCsv(withRules,card,preview,randomUUID(),timestamp,randomUUID);
+ assert.deepEqual(saved.creditPurchases?.map(t=>t.category),['Assinaturas','Outros']);
+ assert.equal(withRules.creditPurchases,undefined);
+});
+
+test('import rejects a stale preview after a category rule changed',async()=>{
+ const rules:FinanceData={...data,categoryRules:[
+  {id:'r',phrase:'Mercado',category:'Alimentação',type:'expense',space:'all',enabled:true},
+ ]};
+ const rows=parseCsv('Data;Descrição;Valor\n06/11/2026;Mercado;-28,50').rows;
+ const preview=await previewCsv(rows,rules,bank);
+ assert.equal(preview[0].suggestedCategory,'Alimentação');
+ const changed={...rules,categoryRules:rules.categoryRules?.map(rule=>({...rule,enabled:false}))};
+ assert.throws(()=>applyCsv(changed,bank,preview,'new',timestamp,randomUUID),/regras de categorização mudaram/i);
+});

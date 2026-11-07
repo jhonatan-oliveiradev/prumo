@@ -19,6 +19,7 @@ export function sameFinanceData(left: FinanceData, right: FinanceData) {
   ...data,
   accounts: byId(data.accounts),
   customCategories:[...(data.customCategories??[])].sort((a,b)=>a.localeCompare(b,'pt-BR')),
+  categoryRules:[...(data.categoryRules??[])],
   transactions: byId(data.transactions),
   transfers: byId(data.transfers??[]),
   reconciliations: byId(data.reconciliations??[]),
