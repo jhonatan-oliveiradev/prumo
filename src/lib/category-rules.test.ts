@@ -38,9 +38,9 @@ test('disabling or removing rule affects future matches only',()=>{
 });
 
 test('duplicate matching terms, missing categories and invalid lengths are rejected',()=>{
- assert.throws(()=>addCategoryRule(base,{...first,id:'different',phrase:'cafe'}),/não são permitidas/);
- assert.throws(()=>addCategoryRule(base,{...first,id:'different',category:'Inventada',phrase:'Cinema'}),/não são permitidas/);
- assert.throws(()=>addCategoryRule(base,{...first,id:'different',phrase:'x'}),/não são permitidas/);
+ assert.throws(()=>addCategoryRule(base,{...first,id:'different',phrase:'cafe'}),/não são permitidas/i);
+ assert.throws(()=>addCategoryRule(base,{...first,id:'different',category:'Inventada',phrase:'Cinema'}),/não são permitidas/i);
+ assert.throws(()=>addCategoryRule(base,{...first,id:'different',phrase:'x'}),/não são permitidas/i);
  assert.equal(validCategoryRules({...emptyData,categoryRules:[{...first,enabled:'true' as unknown as boolean}]}),false);
  assert.equal(parseWorkspaceInput({revision:0,data:{...base,categoryRules:[first,first]}}),null);
 });
