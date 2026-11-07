@@ -133,7 +133,7 @@ test('rules suggest categories for new bank entries and preserve historical clas
  const rows=parseCsv(csv).rows;
  const preview=await previewCsv(rows,catalog,bank);
  assert.deepEqual(preview.map(row=>row.suggestedCategory??'Outros'),['Assinaturas','Trabalho','Outros']);
- const saved=applyCsv(catalog,bank,preview,'batch-rules',timestamp,randomUUID);
+ const saved=applyCsv(catalog,bank,preview,randomUUID(),timestamp,randomUUID);
  assert.deepEqual(saved.transactions.slice(1).map(t=>t.category),['Assinaturas','Trabalho','Outros']);
  assert.equal(saved.transactions[0].category,'Lazer');
  assert.equal(catalog.transactions.length,1);
@@ -147,7 +147,7 @@ test('rules respect card space and never recategorize an already imported statem
  const csv='Data;Descrição;Valor\n06/11/2026;Netflix;45,50\n06/11/2026;Serviço hospedagem;120,00';
  const preview=await previewCsv(parseCsv(csv).rows,withRules,card);
  assert.deepEqual(preview.map(r=>r.suggestedCategory??'Outros'),['Assinaturas','Outros']);
- const saved=applyCsv(withRules,card,preview,'batch-card',timestamp,randomUUID);
+ const saved=applyCsv(withRules,card,preview,randomUUID(),timestamp,randomUUID);
  assert.deepEqual(saved.creditPurchases?.map(t=>t.category),['Assinaturas','Outros']);
  assert.equal(withRules.creditPurchases,undefined);
 });
