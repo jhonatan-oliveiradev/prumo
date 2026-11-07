@@ -53,7 +53,9 @@ export function CategoryRuleManager({data,onChange}:{data:FinanceData;onChange:(
   try{persist(removeCategoryRule(data,rule.id),'Regra removida. Lançamentos anteriores permanecem como estavam.');}
   catch(cause){setError(cause instanceof Error?cause.message:'Não foi possível remover a regra.');}
  }
- const preview=sample.trim()?matchCategoryRule(data,{description:sample,type,space:space==='all'?'personal':space}):null;
+ const previewPersonal=sample.trim()?matchCategoryRule(data,{description:sample,type,space:'personal'}):null;
+ const previewWork=sample.trim()?matchCategoryRule(data,{description:sample,type,space:'work'}):null;
+ const describe=(rule:CategoryRule|null)=>rule?`${rule.phrase} → ${rule.category}`:'Nenhuma regra correspondente';
  return <section className="category-rule-manager" aria-labelledby="category-rules-title">
   <div className="category-rule-heading">
    <span className="category-rule-symbol"><Sparkles size={18} aria-hidden="true"/></span>
@@ -104,8 +106,8 @@ export function CategoryRuleManager({data,onChange}:{data:FinanceData;onChange:(
    <label htmlFor="category-rule-example">Experimente uma descrição</label>
    <input id="category-rule-example" placeholder="Ex.: Netflix mensalidade" maxLength={100} value={sample} onChange={e=>setSample(e.target.value)}/>
    <p aria-live="polite">{sample.trim()
-    ?preview?`Regra correspondente: ${preview.phrase} → ${preview.category}.`:'Nenhuma regra ativa corresponde a essa descrição.'
-    :'Digite uma descrição para conferir a primeira regra aplicável.'}</p>
+    ?`Pessoal: ${describe(previewPersonal)}. Trabalho: ${describe(previewWork)}.`
+    :'Digite uma descrição para conferir as regras já salvas em cada espaço.'}</p>
   </div>}
   <p className="category-rule-footer">Ao importar um CSV, a categoria sugerida é apresentada para revisão. Ajustes manuais em registros anteriores nunca são substituídos automaticamente.</p>
  </section>;
